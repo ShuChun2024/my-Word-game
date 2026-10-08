@@ -1,0 +1,3861 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>英文單字測驗遊戲</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            "Microsoft JhengHei",
+            sans-serif;
+        background: #f3f6fa;
+        color: #222;
+    }
+
+    body {
+        padding: 12px;
+    }
+
+    .app {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .header {
+        background: #1f4e78;
+        color: white;
+        border-radius: 16px;
+        padding: 18px;
+        text-align: center;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 26px;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 190px;
+        resize: vertical;
+        border: 1px solid #cfd8e3;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 16px;
+        line-height: 1.6;
+        outline: none;
+    }
+
+    textarea:focus {
+        border-color: #1f4e78;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        margin-top: 10px;
+        font-size: 15px;
+    }
+
+    button {
+        border: none;
+        border-radius: 12px;
+        min-height: 48px;
+        padding: 10px 18px;
+        font-size: 17px;
+        font-weight: bold;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
+    button:active {
+        transform: scale(0.98);
+    }
+
+    .btn-primary {
+        background: #1f4e78;
+        color: white;
+    }
+
+    .btn-secondary {
+        background: #e7edf4;
+        color: #1f4e78;
+    }
+
+    .btn-success {
+        background: #198754;
+        color: white;
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .button-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .game-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        flex-wrap: wrap;
+    }
+
+    .score {
+        color: #1f4e78;
+    }
+
+    .progress {
+        color: #555;
+    }
+
+    .mode-label {
+        display: inline-block;
+        background: #1f4e78;
+        color: white;
+        border-radius: 20px;
+        padding: 7px 14px;
+        font-size: 14px;
+        margin-bottom: 14px;
+    }
+
+    .question-box {
+        text-align: center;
+    }
+
+    .question-title {
+        font-size: 22px;
+        font-weight: bold;
+        margin: 8px 0 18px;
+        line-height: 1.5;
+    }
+
+    .chinese {
+        font-size: 24px;
+        font-weight: bold;
+        line-height: 1.6;
+        margin: 15px 0;
+    }
+
+    .english-sentence {
+        font-size: 20px;
+        line-height: 1.7;
+        margin: 18px 0;
+        padding: 15px;
+        background: #f5f8fb;
+        border-radius: 12px;
+        text-align: left;
+    }
+
+    .hint {
+        color: #666;
+        font-size: 16px;
+        margin: 8px 0;
+    }
+
+    .options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .option-btn {
+        background: white;
+        border: 2px solid #d3dce6;
+        color: #222;
+        min-height: 58px;
+        font-size: 18px;
+        word-break: break-word;
+    }
+
+    .option-btn:hover {
+        border-color: #1f4e78;
+    }
+
+    .option-btn.correct {
+        background: #d1e7dd;
+        border-color: #198754;
+        color: #146c43;
+    }
+
+    .option-btn.wrong {
+        background: #f8d7da;
+        border-color: #dc3545;
+        color: #842029;
+    }
+
+    .result-message {
+        margin-top: 16px;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 19px;
+        font-weight: bold;
+    }
+
+    .result-correct {
+        background: #d1e7dd;
+        color: #146c43;
+    }
+
+    .result-wrong {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .next-btn {
+        width: 100%;
+        margin-top: 12px;
+    }
+
+    /* Wordle */
+
+    .wordle-board {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 7px;
+        margin: 20px 0;
+    }
+
+    .wordle-row {
+        display: flex;
+        gap: 5px;
+    }
+
+    .wordle-cell {
+        width: 43px;
+        height: 43px;
+        border: 2px solid #aeb8c2;
+        border-radius: 6px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 22px;
+        font-weight: bold;
+        text-transform: uppercase;
+        background: white;
+    }
+
+    .wordle-cell.correct {
+        background: #198754;
+        border-color: #198754;
+        color: white;
+    }
+
+    .wordle-cell.present {
+        background: #e0a800;
+        border-color: #e0a800;
+        color: white;
+    }
+
+    .wordle-cell.absent {
+        background: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+
+    .keyboard {
+        margin-top: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        width: 100%;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .key {
+        flex: 1;
+        max-width: 42px;
+        min-height: 45px;
+        padding: 5px;
+        border-radius: 6px;
+        background: #dce2e8;
+        color: #222;
+        font-size: 15px;
+        font-weight: bold;
+    }
+
+    .key.wide {
+        max-width: 65px;
+    }
+
+    .key.correct {
+        background: #198754;
+        color: white;
+    }
+
+    .key.present {
+        background: #e0a800;
+        color: white;
+    }
+
+    .key.absent {
+        background: #6c757d;
+        color: white;
+    }
+
+    .wordle-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .wordle-actions button {
+        flex: 1;
+    }
+
+    .translation-input {
+        width: 100%;
+        border: 2px solid #cfd8e3;
+        border-radius: 12px;
+        padding: 13px;
+        font-size: 19px;
+        outline: none;
+        margin-top: 10px;
+    }
+
+    .translation-input:focus {
+        border-color: #1f4e78;
+    }
+
+    .answer-display {
+        margin-top: 12px;
+        padding: 12px;
+        background: #f5f8fb;
+        border-radius: 10px;
+        font-size: 18px;
+        line-height: 1.6;
+        text-align: left;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .stats {
+        text-align: center;
+    }
+
+    .stats h2 {
+        font-size: 27px;
+        margin-top: 5px;
+    }
+
+    .final-score {
+        font-size: 42px;
+        font-weight: bold;
+        color: #1f4e78;
+        margin: 15px 0;
+    }
+
+    .stat-line {
+        font-size: 19px;
+        line-height: 2;
+    }
+
+    .status {
+        margin-top: 8px;
+        color: #555;
+        font-size: 14px;
+        min-height: 20px;
+    }
+
+    @media (min-width: 600px) {
+        body {
+            padding: 24px;
+        }
+
+        .button-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .header h1 {
+            font-size: 30px;
+        }
+
+        .wordle-cell {
+            width: 48px;
+            height: 48px;
+        }
+
+        .key {
+            max-width: 48px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .wordle-cell {
+            width: 37px;
+            height: 37px;
+            font-size: 19px;
+        }
+
+        .key {
+            min-height: 40px;
+            font-size: 13px;
+        }
+
+        .question-title {
+            font-size: 20px;
+        }
+
+        .chinese {
+            font-size: 21px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="header">
+        <h1>英文單字測驗</h1>
+    </div>
+
+    <!-- 教材區 -->
+    <div id="inputPanel" class="panel">
+
+        <div>
+            <strong>TXT 教材</strong>
+        </div>
+
+        <textarea id="txtInput"
+            placeholder="請貼上英文單字教材，例如：
+
+position
+職位；位置
+The advertised position provides health care and other benefits.
+廣告上的職位提供醫療保健和其他福利。
+
+position
+放置
+The secretary positioned the chairs around the table before the meeting began.
+秘書在會議開始前把椅子擺放在了桌子周圍。"></textarea>
+
+        <input
+            type="file"
+            id="fileInput"
+            accept=".txt,text/plain">
+
+        <div class="button-row">
+            <button
+                class="btn-secondary"
+                onclick="loadTXTFile()">
+                上傳 TXT
+            </button>
+
+            <button
+                class="btn-primary"
+                onclick="startGame()">
+                開始遊戲
+            </button>
+        </div>
+
+        <div id="parseStatus" class="status"></div>
+
+    </div>
+
+    <!-- 遊戲區 -->
+    <div id="gamePanel" class="hidden">
+
+        <div class="panel">
+
+            <div class="game-info">
+                <div class="score">
+                    分數：<span id="score">0</span>
+                </div>
+
+                <div class="progress">
+                    第 <span id="questionNumber">1</span> / 10 題
+                </div>
+            </div>
+
+        </div>
+
+        <div id="questionPanel" class="panel question-box"></div>
+
+    </div>
+
+    <!-- 結果區 -->
+    <div id="resultPanel" class="panel stats hidden">
+
+        <h2>測驗完成！</h2>
+
+        <div class="final-score">
+            <span id="finalScore">0</span>
+        </div>
+
+        <div class="stat-line">
+            總題數：<span id="finalTotal">10</span>
+        </div>
+
+        <div class="stat-line">
+            答對：<span id="finalCorrect">0</span>
+        </div>
+
+        <div class="stat-line">
+            答錯：<span id="finalWrong">0</span>
+        </div>
+
+        <div class="stat-line">
+            總分：<span id="finalScoreText">0</span>
+        </div>
+
+        <div class="stat-line">
+            正確率：<span id="finalAccuracy">0%</span>
+        </div>
+
+        <button
+            class="btn-primary next-btn"
+            onclick="resetGame()">
+            重新開始
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =========================================================
+   全域資料
+========================================================= */
+
+let vocabulary = [];
+
+let gameQuestions = [];
+
+let currentQuestionIndex = 0;
+
+let score = 0;
+
+let correctCount = 0;
+
+let wrongCount = 0;
+
+let answered = false;
+
+/*
+ * 防止同一局重複：
+ *
+ * usedWords
+ * 同一單字只能出現一次
+ *
+ * usedSentences
+ * 同一英文例句只能使用一次
+ *
+ * usedChineseSentences
+ * 同一中文例句只能使用一次
+ *
+ * usedQuestions
+ * 最終題目識別
+ */
+let usedWords = new Set();
+
+let usedSentences = new Set();
+
+let usedChineseSentences = new Set();
+
+let usedQuestions = new Set();
+
+/*
+ * Wordle 狀態
+ */
+let wordleState = {
+    answer: "",
+    currentGuess: "",
+    guesses: [],
+    maxAttempts: 6,
+    keyboardState: {}
+};
+
+
+/* =========================================================
+   基本工具
+========================================================= */
+
+function shuffle(array) {
+
+    const arr = [...array];
+
+    for (let i = arr.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    return arr;
+}
+
+
+function normalizeWord(word) {
+
+    return String(word || "")
+        .trim()
+        .toLowerCase();
+}
+
+
+function normalizeSpaces(text) {
+
+    return String(text || "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+
+function cleanText(text) {
+
+    return String(text || "")
+        .replace(/^\uFEFF/, "")
+        .trim();
+}
+
+
+/*
+ * 判斷是否為英文單字
+ *
+ * 支援：
+ * position
+ * achievement
+ * résumé
+ * manager's
+ *
+ * 但不接受：
+ * 常考語句
+ * 123
+ * 空白句子
+ */
+function isEnglishWordLine(text) {
+
+    const value = cleanText(text);
+
+    if (!value) {
+        return false;
+    }
+
+    if (value.length < 2) {
+        return false;
+    }
+
+    /*
+     * 英文單字允許：
+     * A-Z
+     * a-z
+     * '
+     * -
+     * 重音符號等英文字母
+     */
+    if (!/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ'-]*$/.test(value)) {
+        return false;
+    }
+
+    /*
+     * 至少要有英文字符
+     */
+    if (!/[A-Za-z]/.test(value)) {
+        return false;
+    }
+
+    return true;
+}
+
+
+/*
+ * 忽略教材中的標題
+ */
+function isIgnoredHeading(text) {
+
+    const value = normalizeSpaces(text);
+
+    const headings = [
+        "常考語句",
+        "易混淆單字",
+        "出題重點",
+        "常考",
+        "補充",
+        "相關片語",
+        "語句",
+        "例句",
+        "單字"
+    ];
+
+    return headings.includes(value);
+}
+
+
+/*
+ * 中文判斷
+ */
+function containsChinese(text) {
+
+    return /[\u3400-\u9FFF]/.test(String(text || ""));
+}
+
+
+/*
+ * 英文句子判斷
+ */
+function looksLikeEnglishSentence(text) {
+
+    const value = cleanText(text);
+
+    if (!value) {
+        return false;
+    }
+
+    /*
+     * 至少有英文
+     */
+    if (!/[A-Za-z]/.test(value)) {
+        return false;
+    }
+
+    /*
+     * 中文例句不應該被視為英文例句
+     */
+    if (containsChinese(value)) {
+        return false;
+    }
+
+    /*
+     * 英文句子通常包含空格。
+     *
+     * 但保留單字型例句的可能性。
+     */
+    return true;
+}
+
+
+/*
+ * 中文例句 / 中文意思判斷
+ */
+function looksLikeChineseText(text) {
+
+    const value = cleanText(text);
+
+    if (!value) {
+        return false;
+    }
+
+    return containsChinese(value);
+}
+
+
+/* =========================================================
+   TXT 解析
+========================================================= */
+
+/*
+ * TXT 結構：
+ *
+ * position
+ * 職位；位置
+ * The advertised position provides health care and other benefits.
+ * 廣告上的職位提供醫療保健和其他福利。
+ *
+ * position
+ * 放置
+ * The secretary positioned the chairs...
+ * 秘書...
+ *
+ * 常考語句
+ * accept a position
+ * 接受職位
+ * ...
+ *
+ * achievement
+ * 成就；達成
+ * ...
+ *
+ * Parser 採取「候選英文單字 + 後續三行」
+ * 的方式。
+ *
+ * 如果後面資料不完整，直接跳過。
+ */
+
+function parseVocabulary(text) {
+
+    const lines = String(text || "")
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .split("\n")
+        .map(line => cleanText(line));
+
+    const result = [];
+
+    for (let i = 0; i < lines.length; i++) {
+
+        const wordLine = lines[i];
+
+        if (!isEnglishWordLine(wordLine)) {
+            continue;
+        }
+
+        if (isIgnoredHeading(wordLine)) {
+            continue;
+        }
+
+        /*
+         * 單字至少 6 個英文字母
+         */
+        const normalized = normalizeWord(wordLine);
+
+        const lettersOnly = normalized
+            .replace(/[^a-zà-öø-ÿ]/gi, "");
+
+        if (lettersOnly.length < 6) {
+            continue;
+        }
+
+        /*
+         * 必須存在：
+         *
+         * 下一行：中文意思
+         * 下兩行：英文例句
+         * 下三行：中文例句
+         */
+
+        if (i + 3 >= lines.length) {
+            continue;
+        }
+
+        const meaning = cleanText(lines[i + 1]);
+
+        const englishSentence = cleanText(lines[i + 2]);
+
+        const chineseSentence = cleanText(lines[i + 3]);
+
+        if (!looksLikeChineseText(meaning)) {
+            continue;
+        }
+
+        if (!looksLikeEnglishSentence(englishSentence)) {
+            continue;
+        }
+
+        if (!looksLikeChineseText(chineseSentence)) {
+            continue;
+        }
+
+        /*
+         * 避免把「常考語句」等誤判成資料。
+         */
+        if (isIgnoredHeading(meaning)) {
+            continue;
+        }
+
+        const item = {
+            word: wordLine,
+            normalizedWord: normalized,
+            meaning: meaning,
+            englishSentence: englishSentence,
+            chineseSentence: chineseSentence
+        };
+
+        result.push(item);
+
+        /*
+         * 不直接 i += 3。
+         *
+         * 因為同一單字可能再次出現，
+         * 下一筆資料仍然需要被解析。
+         */
+    }
+
+    return result;
+}
+
+
+/* =========================================================
+   詞形判斷
+========================================================= */
+
+/*
+ * 取得英文句子中的單字 token。
+ */
+function getEnglishTokens(sentence) {
+
+    return String(sentence || "")
+        .match(/[A-Za-zÀ-ÖØ-öø-ÿ]+(?:['-][A-Za-zÀ-ÖØ-öø-ÿ]+)*/g) || [];
+}
+
+
+/*
+ * 判斷句子中的實際單字是否為教材單字的詞形變化。
+ *
+ * 例如：
+ *
+ * position
+ * positions
+ * positioned
+ * positioning
+ *
+ * 會允許：
+ *
+ * position
+ * positions
+ * positioned
+ * positioning
+ *
+ * 也會處理：
+ *
+ * study -> studies
+ * study -> studied
+ * study -> studying
+ *
+ * carry -> carries
+ * carry -> carried
+ */
+function isWordForm(actual, base) {
+
+    const a = normalizeWord(actual);
+
+    const b = normalizeWord(base);
+
+    if (!a || !b) {
+        return false;
+    }
+
+    if (a === b) {
+        return true;
+    }
+
+    /*
+     * 複數 / 第三人稱
+     */
+    if (a === b + "s") {
+        return true;
+    }
+
+    if (a === b + "es") {
+        return true;
+    }
+
+    /*
+     * -ed
+     */
+    if (a === b + "ed") {
+        return true;
+    }
+
+    /*
+     * -ing
+     */
+    if (a === b + "ing") {
+        return true;
+    }
+
+    /*
+     * 字尾 e：
+     *
+     * position -> positioning
+     * create -> created
+     */
+    if (b.endsWith("e")) {
+
+        const stem = b.slice(0, -1);
+
+        if (a === stem + "ing") {
+            return true;
+        }
+
+        if (a === stem + "ed") {
+            return true;
+        }
+    }
+
+    /*
+     * y 變化：
+     *
+     * study -> studies
+     * study -> studied
+     */
+    if (b.endsWith("y") && b.length > 1) {
+
+        const stem = b.slice(0, -1);
+
+        if (a === stem + "ies") {
+            return true;
+        }
+
+        if (a === stem + "ied") {
+            return true;
+        }
+    }
+
+    /*
+     * 較常見的雙寫字尾：
+     *
+     * stop -> stopped
+     * plan -> planned
+     *
+     * 這裡使用保守判斷。
+     */
+    if (b.length >= 3) {
+
+        const last = b[b.length - 1];
+
+        const secondLast = b[b.length - 2];
+
+        const vowels = "aeiou";
+
+        if (
+            !vowels.includes(last) &&
+            vowels.includes(secondLast)
+        ) {
+
+            if (a === b + last + "ed") {
+                return true;
+            }
+
+            if (a === b + last + "ing") {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+/*
+ * 從例句中找出真正出現的答案。
+ *
+ * 例如：
+ *
+ * base = position
+ *
+ * sentence =
+ * The secretary positioned the chairs...
+ *
+ * 回傳：
+ * positioned
+ *
+ * 如果找不到，就回傳 null。
+ */
+function findWordFormInSentence(sentence, baseWord) {
+
+    const tokens = getEnglishTokens(sentence);
+
+    for (const token of tokens) {
+
+        if (isWordForm(token, baseWord)) {
+
+            return token;
+        }
+    }
+
+    return null;
+}
+
+
+/*
+ * 將句子中的實際詞形替換為 ___
+ *
+ * 必須只替換完整單字，
+ * 不可破壞其他字。
+ */
+function createClozeSentence(sentence, actualWord) {
+
+    const escaped = actualWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const regex = new RegExp(
+        "(^|[^A-Za-zÀ-ÖØ-öø-ÿ])(" +
+        escaped +
+        ")(?=$|[^A-Za-zÀ-ÖØ-öø-ÿ])",
+        "i"
+    );
+
+    const result = String(sentence || "").replace(
+        regex,
+        "$1___"
+    );
+
+    if (result === sentence) {
+        return null;
+    }
+
+    if (!result.includes("___")) {
+        return null;
+    }
+
+    return result;
+}
+
+
+/* =========================================================
+   題目去重
+========================================================= */
+
+function checkDuplicateQuestion(question) {
+
+    if (!question) {
+        return true;
+    }
+
+    /*
+     * 單字重複
+     */
+    if (
+        question.normalizedWord &&
+        usedWords.has(question.normalizedWord)
+    ) {
+        return true;
+    }
+
+    /*
+     * 英文例句重複
+     */
+    if (
+        question.englishSentence &&
+        usedSentences.has(
+            normalizeSpaces(question.englishSentence).toLowerCase()
+        )
+    ) {
+        return true;
+    }
+
+    /*
+     * 中文例句重複
+     */
+    if (
+        question.chineseSentence &&
+        usedChineseSentences.has(
+            normalizeSpaces(question.chineseSentence)
+        )
+    ) {
+        return true;
+    }
+
+    /*
+     * 題目 key
+     */
+    if (
+        question.questionKey &&
+        usedQuestions.has(question.questionKey)
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
+
+/*
+ * 加入已使用集合。
+ */
+function registerQuestion(question) {
+
+    if (!question) {
+        return;
+    }
+
+    if (question.normalizedWord) {
+        usedWords.add(question.normalizedWord);
+    }
+
+    if (question.englishSentence) {
+
+        usedSentences.add(
+            normalizeSpaces(question.englishSentence)
+                .toLowerCase()
+        );
+    }
+
+    if (question.chineseSentence) {
+
+        usedChineseSentences.add(
+            normalizeSpaces(question.chineseSentence)
+        );
+    }
+
+    if (question.questionKey) {
+        usedQuestions.add(question.questionKey);
+    }
+}
+
+
+/* =========================================================
+   模式 1：英文克漏字
+========================================================= */
+
+function buildClozeQuestions() {
+
+    const candidates = [];
+
+    for (const item of vocabulary) {
+
+        /*
+         * 必須有完整資料
+         */
+        if (
+            !item.normalizedWord ||
+            !item.meaning ||
+            !item.englishSentence ||
+            !item.chineseSentence
+        ) {
+            continue;
+        }
+
+        const actualWord = findWordFormInSentence(
+            item.englishSentence,
+            item.word
+        );
+
+        /*
+         * 找不到安全詞形就跳過。
+         */
+        if (!actualWord) {
+            continue;
+        }
+
+        const clozeSentence = createClozeSentence(
+            item.englishSentence,
+            actualWord
+        );
+
+        if (!clozeSentence) {
+            continue;
+        }
+
+        /*
+         * 必須確定答案存在。
+         */
+        if (!actualWord.trim()) {
+            continue;
+        }
+
+        candidates.push({
+            item,
+            actualWord,
+            clozeSentence
+        });
+    }
+
+    return candidates;
+}
+
+
+/*
+ * 建立四選一干擾選項。
+ *
+ * 正確答案：
+ * actualWord
+ *
+ * 干擾答案：
+ * 其他不同單字
+ */
+function buildClozeQuestion(candidate) {
+
+    if (!candidate || !candidate.item) {
+        return null;
+    }
+
+    const item = candidate.item;
+
+    const answer = candidate.actualWord.trim();
+
+    if (!answer) {
+        return null;
+    }
+
+    const clozeSentence = candidate.clozeSentence;
+
+    if (!clozeSentence || !clozeSentence.includes("___")) {
+        return null;
+    }
+
+    /*
+     * 找其他單字作為干擾。
+     *
+     * 不能使用相同單字。
+     */
+    const distractors = shuffle(
+        vocabulary.filter(v =>
+            normalizeWord(v.normalizedWord) !==
+            normalizeWord(item.normalizedWord)
+        )
+    );
+
+    const options = [];
+
+    for (const d of distractors) {
+
+        const value = String(d.word || "").trim();
+
+        if (!value) {
+            continue;
+        }
+
+        /*
+         * 不可與正確答案相同。
+         */
+        if (
+            normalizeWord(value) ===
+            normalizeWord(answer)
+        ) {
+            continue;
+        }
+
+        /*
+         * 選項不可重複。
+         */
+        if (
+            options.some(
+                x =>
+                    normalizeWord(x) ===
+                    normalizeWord(value)
+            )
+        ) {
+            continue;
+        }
+
+        options.push(value);
+
+        if (options.length === 3) {
+            break;
+        }
+    }
+
+    /*
+     * 沒有三個干擾答案，絕對不建立題目。
+     */
+    if (options.length !== 3) {
+        return null;
+    }
+
+    options.push(answer);
+
+    /*
+     * 最後再次確認四個選項唯一。
+     */
+    const uniqueOptions = new Set(
+        options.map(x => normalizeWord(x))
+    );
+
+    if (uniqueOptions.size !== 4) {
+        return null;
+    }
+
+    const shuffledOptions = shuffle(options);
+
+    const questionKey =
+        "cloze|" +
+        item.normalizedWord +
+        "|" +
+        normalizeSpaces(item.englishSentence).toLowerCase();
+
+    return {
+        type: "cloze",
+        mode: 1,
+        word: item.word,
+        normalizedWord: item.normalizedWord,
+        meaning: item.meaning,
+        englishSentence: item.englishSentence,
+        chineseSentence: item.chineseSentence,
+        clozeSentence,
+        answer,
+        options: shuffledOptions,
+        questionKey
+    };
+}
+
+
+/* =========================================================
+   模式 2：Wordle
+========================================================= */
+
+function buildSpellingQuestions() {
+
+    const candidates = [];
+
+    for (const item of vocabulary) {
+
+        if (!item.normalizedWord) {
+            continue;
+        }
+
+        /*
+         * Wordle 只處理純英文字母。
+         *
+         * 例如：
+         * achievement
+         *
+         * 不處理：
+         * well-known
+         * manager's
+         */
+        if (!/^[a-z]+$/i.test(item.word)) {
+            continue;
+        }
+
+        const answer = normalizeWord(item.word);
+
+        /*
+         * 至少六個字母
+         */
+        if (answer.length < 6) {
+            continue;
+        }
+
+        candidates.push(item);
+    }
+
+    return candidates;
+}
+
+
+function buildSpellingQuestion(item) {
+
+    if (!item) {
+        return null;
+    }
+
+    const answer = normalizeWord(item.word);
+
+    if (!answer) {
+        return null;
+    }
+
+    if (!/^[a-z]+$/.test(answer)) {
+        return null;
+    }
+
+    if (answer.length < 6) {
+        return null;
+    }
+
+    /*
+     * 注意：
+     *
+     * 模式 2 的 question 物件故意不提供
+     * englishSentence。
+     *
+     * 因此畫面絕對不會顯示英文例句。
+     */
+    return {
+        type: "spelling",
+        mode: 2,
+        word: item.word,
+        normalizedWord: item.normalizedWord,
+        meaning: item.meaning,
+        chineseSentence: item.chineseSentence,
+        answer,
+        questionKey:
+            "spelling|" +
+            item.normalizedWord
+    };
+}
+
+
+/* =========================================================
+   模式 3：中翻英
+========================================================= */
+
+function buildTranslationQuestions() {
+
+    const candidates = [];
+
+    for (const item of vocabulary) {
+
+        if (
+            !item.normalizedWord ||
+            !item.meaning
+        ) {
+            continue;
+        }
+
+        /*
+         * 類型 A：
+         *
+         * 中文意思 -> 英文單字
+         */
+        candidates.push({
+            item,
+            translationType: "word"
+        });
+
+        /*
+         * 類型 B：
+         *
+         * 中文例句 -> 英文例句
+         *
+         * 沒有中文例句就不能建立。
+         */
+        if (
+            item.chineseSentence &&
+            item.englishSentence
+        ) {
+
+            candidates.push({
+                item,
+                translationType: "sentence"
+            });
+        }
+    }
+
+    return candidates;
+}
+
+
+function buildTranslationQuestion(candidate) {
+
+    if (!candidate || !candidate.item) {
+        return null;
+    }
+
+    const item = candidate.item;
+
+    if (candidate.translationType === "word") {
+
+        if (
+            !item.meaning ||
+            !item.word
+        ) {
+            return null;
+        }
+
+        return {
+            type: "translation",
+            translationType: "word",
+            mode: 3,
+            word: item.word,
+            normalizedWord: item.normalizedWord,
+            meaning: item.meaning,
+            answer: item.word,
+            questionKey:
+                "translation-word|" +
+                item.normalizedWord
+        };
+    }
+
+
+    if (candidate.translationType === "sentence") {
+
+        if (
+            !item.chineseSentence ||
+            !item.englishSentence
+        ) {
+            return null;
+        }
+
+        return {
+            type: "translation",
+            translationType: "sentence",
+            mode: 3,
+            word: item.word,
+            normalizedWord: item.normalizedWord,
+            meaning: item.meaning,
+            chineseSentence: item.chineseSentence,
+            englishSentence: item.englishSentence,
+            answer: item.englishSentence,
+            questionKey:
+                "translation-sentence|" +
+                item.normalizedWord +
+                "|" +
+                normalizeSpaces(item.chineseSentence)
+        };
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   建立遊戲題目
+========================================================= */
+
+/*
+ * 模式數量：
+ *
+ * 10 題固定。
+ *
+ * 三種模式：
+ * 3 / 3 / 4
+ *
+ * 每次隨機決定哪一個模式 4 題。
+ */
+function createModeDistribution() {
+
+    const modes = [
+        1, 1, 1,
+        2, 2, 2,
+        3, 3, 3
+    ];
+
+    /*
+     * 第十題隨機加入其中一種模式。
+     */
+    const extraMode =
+        [1, 2, 3][
+            Math.floor(Math.random() * 3)
+        ];
+
+    modes.push(extraMode);
+
+    return shuffle(modes);
+}
+
+
+/*
+ * 建立所有可用題目。
+ */
+function buildAllQuestionPools() {
+
+    const clozePool = [];
+
+    const clozeCandidates =
+        buildClozeQuestions();
+
+    for (const candidate of clozeCandidates) {
+
+        const q =
+            buildClozeQuestion(candidate);
+
+        if (q) {
+            clozePool.push(q);
+        }
+    }
+
+
+    const spellingPool = [];
+
+    const spellingCandidates =
+        buildSpellingQuestions();
+
+    for (const item of spellingCandidates) {
+
+        const q =
+            buildSpellingQuestion(item);
+
+        if (q) {
+            spellingPool.push(q);
+        }
+    }
+
+
+    const translationPool = [];
+
+    const translationCandidates =
+        buildTranslationQuestions();
+
+    for (const candidate of translationCandidates) {
+
+        const q =
+            buildTranslationQuestion(candidate);
+
+        if (q) {
+            translationPool.push(q);
+        }
+    }
+
+
+    return {
+        clozePool: shuffle(clozePool),
+        spellingPool: shuffle(spellingPool),
+        translationPool: shuffle(translationPool)
+    };
+}
+
+
+/*
+ * 從題庫中嘗試建立 10 題。
+ *
+ * 核心規則：
+ *
+ * 同一局：
+ * 1. 單字不能重複
+ * 2. 英文例句不能重複
+ * 3. 中文例句不能重複
+ * 4. 題目不能重複
+ */
+function generateGameQuestions() {
+
+    const pools = buildAllQuestionPools();
+
+    /*
+     * 先準備所有候選題。
+     */
+    const allQuestions = [
+        ...pools.clozePool,
+        ...pools.spellingPool,
+        ...pools.translationPool
+    ];
+
+    /*
+     * 至少需要 10 個不同單字。
+     *
+     * 這是最基本條件。
+     */
+    const uniqueWords = new Set(
+        allQuestions.map(
+            q => q.normalizedWord
+        )
+    );
+
+    if (uniqueWords.size < 10) {
+        return [];
+    }
+
+
+    /*
+     * 嘗試多次尋找符合：
+     *
+     * 3/3/4
+     *
+     * 且沒有重複的組合。
+     */
+    for (let attempt = 0; attempt < 300; attempt++) {
+
+        usedWords = new Set();
+        usedSentences = new Set();
+        usedChineseSentences = new Set();
+        usedQuestions = new Set();
+
+        const distribution =
+            createModeDistribution();
+
+        const selected = [];
+
+        let success = true;
+
+
+        for (const mode of distribution) {
+
+            let pool;
+
+            if (mode === 1) {
+                pool = pools.clozePool;
+            }
+            else if (mode === 2) {
+                pool = pools.spellingPool;
+            }
+            else {
+                pool = pools.translationPool;
+            }
+
+            /*
+             * 隨機找可用題目。
+             */
+            const shuffledPool =
+                shuffle(pool);
+
+            let found = null;
+
+            for (const q of shuffledPool) {
+
+                if (
+                    !q ||
+                    !q.normalizedWord
+                ) {
+                    continue;
+                }
+
+                if (checkDuplicateQuestion(q)) {
+                    continue;
+                }
+
+                found = q;
+                break;
+            }
+
+            if (!found) {
+
+                success = false;
+                break;
+            }
+
+            registerQuestion(found);
+
+            selected.push(found);
+        }
+
+
+        if (success && selected.length === 10) {
+
+            /*
+             * 再次確認 10 題。
+             */
+            if (
+                new Set(
+                    selected.map(
+                        q => q.normalizedWord
+                    )
+                ).size !== 10
+            ) {
+                continue;
+            }
+
+            /*
+             * 題目排序重新隨機。
+             */
+            return shuffle(selected);
+        }
+    }
+
+    /*
+     * 無法建立符合條件的 10 題。
+     */
+    return [];
+}
+
+
+/* =========================================================
+   開始遊戲
+========================================================= */
+
+function startGame() {
+
+    const text =
+        document.getElementById("txtInput").value;
+
+    if (!text.trim()) {
+
+        showParseStatus(
+            "請先輸入或上傳 TXT 教材。",
+            true
+        );
+
+        return;
+    }
+
+
+    vocabulary =
+        parseVocabulary(text);
+
+
+    if (vocabulary.length === 0) {
+
+        showParseStatus(
+            "找不到符合格式的有效單字資料。",
+            true
+        );
+
+        return;
+    }
+
+
+    /*
+     * 題庫數量提示。
+     */
+    showParseStatus(
+        "已解析 " +
+        vocabulary.length +
+        " 筆有效單字資料。",
+        false
+    );
+
+
+    gameQuestions =
+        generateGameQuestions();
+
+
+    if (gameQuestions.length !== 10) {
+
+        alert(
+            "目前教材不足以產生 10 題不重複題目，請加入更多教材。"
+        );
+
+        return;
+    }
+
+
+    /*
+     * 重設遊戲。
+     */
+    currentQuestionIndex = 0;
+
+    score = 0;
+
+    correctCount = 0;
+
+    wrongCount = 0;
+
+    answered = false;
+
+
+    usedWords = new Set();
+
+    usedSentences = new Set();
+
+    usedChineseSentences = new Set();
+
+    usedQuestions = new Set();
+
+
+    /*
+     * 這裡重新註冊真正使用的題目。
+     */
+    for (const q of gameQuestions) {
+        registerQuestion(q);
+    }
+
+
+    document
+        .getElementById("inputPanel")
+        .classList.add("hidden");
+
+    document
+        .getElementById("resultPanel")
+        .classList.add("hidden");
+
+    document
+        .getElementById("gamePanel")
+        .classList.remove("hidden");
+
+
+    updateScore();
+
+    showQuestion();
+}
+
+
+/* =========================================================
+   顯示題目
+========================================================= */
+
+function showQuestion() {
+
+    const question =
+        gameQuestions[currentQuestionIndex];
+
+    if (!question) {
+
+        finishGame();
+
+        return;
+    }
+
+
+    answered = false;
+
+
+    document.getElementById(
+        "questionNumber"
+    ).textContent =
+        currentQuestionIndex + 1;
+
+
+    const panel =
+        document.getElementById(
+            "questionPanel"
+        );
+
+
+    if (question.type === "cloze") {
+
+        renderClozeQuestion(
+            question,
+            panel
+        );
+
+        return;
+    }
+
+
+    if (question.type === "spelling") {
+
+        renderSpellingQuestion(
+            question,
+            panel
+        );
+
+        return;
+    }
+
+
+    if (question.type === "translation") {
+
+        renderTranslationQuestion(
+            question,
+            panel
+        );
+
+        return;
+    }
+}
+
+
+/* =========================================================
+   模式 1 UI
+========================================================= */
+
+function renderClozeQuestion(question, panel) {
+
+    panel.innerHTML = "";
+
+    const mode =
+        document.createElement("div");
+
+    mode.className = "mode-label";
+
+    mode.textContent =
+        "模式 1｜英文克漏字";
+
+    panel.appendChild(mode);
+
+
+    const meaning =
+        document.createElement("div");
+
+    meaning.className = "chinese";
+
+    meaning.textContent =
+        question.meaning;
+
+    panel.appendChild(meaning);
+
+
+    const sentence =
+        document.createElement("div");
+
+    sentence.className =
+        "english-sentence";
+
+    sentence.textContent =
+        question.clozeSentence;
+
+    panel.appendChild(sentence);
+
+
+    const title =
+        document.createElement("div");
+
+    title.className =
+        "question-title";
+
+    title.textContent =
+        "請選出正確的英文單字";
+
+    panel.appendChild(title);
+
+
+    /*
+     * 安全檢查。
+     *
+     * 任何情況少於四個選項都不允許顯示。
+     */
+    if (
+        !Array.isArray(question.options) ||
+        question.options.length !== 4
+    ) {
+
+        finishCurrentQuestionAsInvalid();
+
+        return;
+    }
+
+
+    const uniqueOptions =
+        new Set(
+            question.options.map(
+                x => normalizeWord(x)
+            )
+        );
+
+    if (uniqueOptions.size !== 4) {
+
+        finishCurrentQuestionAsInvalid();
+
+        return;
+    }
+
+
+    const options =
+        document.createElement("div");
+
+    options.className = "options";
+
+
+    question.options.forEach(
+        option => {
+
+            const btn =
+                document.createElement("button");
+
+            btn.className =
+                "option-btn";
+
+            btn.textContent =
+                option;
+
+            btn.addEventListener(
+                "click",
+                () => {
+
+                    checkClozeAnswer(
+                        question,
+                        option,
+                        btn,
+                        options
+                    );
+                }
+            );
+
+            options.appendChild(btn);
+        }
+    );
+
+
+    panel.appendChild(options);
+
+
+    const result =
+        document.createElement("div");
+
+    result.id =
+        "answerResult";
+
+    panel.appendChild(result);
+}
+
+
+/* =========================================================
+   模式 1 作答
+========================================================= */
+
+function checkClozeAnswer(
+    question,
+    selected,
+    clickedButton,
+    optionsContainer
+) {
+
+    if (answered) {
+        return;
+    }
+
+    answered = true;
+
+
+    const buttons =
+        optionsContainer.querySelectorAll(
+            "button"
+        );
+
+
+    const isCorrect =
+        normalizeWord(selected) ===
+        normalizeWord(question.answer);
+
+
+    buttons.forEach(btn => {
+
+        btn.disabled = true;
+
+        if (
+            normalizeWord(btn.textContent) ===
+            normalizeWord(question.answer)
+        ) {
+
+            btn.classList.add("correct");
+        }
+    });
+
+
+    if (!isCorrect) {
+
+        clickedButton.classList.add("wrong");
+    }
+
+
+    processAnswer(
+        isCorrect,
+        question.answer
+    );
+}
+
+
+/* =========================================================
+   模式 2：Wordle
+========================================================= */
+
+function renderSpellingQuestion(question, panel) {
+
+    panel.innerHTML = "";
+
+
+    const mode =
+        document.createElement("div");
+
+    mode.className = "mode-label";
+
+    mode.textContent =
+        "模式 2｜英文單字拼字";
+
+    panel.appendChild(mode);
+
+
+    /*
+     * 注意：
+     *
+     * 這裡只有中文意思。
+     *
+     * 絕對不加入 englishSentence。
+     */
+    const meaning =
+        document.createElement("div");
+
+    meaning.className =
+        "chinese";
+
+    meaning.textContent =
+        question.meaning;
+
+    panel.appendChild(meaning);
+
+
+    const hint =
+        document.createElement("div");
+
+    hint.className =
+        "hint";
+
+    hint.textContent =
+        "字母數：" +
+        question.answer.length;
+
+    panel.appendChild(hint);
+
+
+    const title =
+        document.createElement("div");
+
+    title.className =
+        "question-title";
+
+    title.textContent =
+        "請輸入英文單字";
+
+    panel.appendChild(title);
+
+
+    /*
+     * 初始化 Wordle。
+     */
+    wordleState = {
+
+        answer:
+            normalizeWord(question.answer),
+
+        currentGuess: "",
+
+        guesses: [],
+
+        maxAttempts: 6,
+
+        keyboardState: {}
+    };
+
+
+    /*
+     * 建立棋盤。
+     */
+    const board =
+        document.createElement("div");
+
+    board.id =
+        "wordleBoard";
+
+    board.className =
+        "wordle-board";
+
+    panel.appendChild(board);
+
+
+    /*
+     * 建立鍵盤。
+     */
+    const keyboard =
+        document.createElement("div");
+
+    keyboard.id =
+        "wordleKeyboard";
+
+    keyboard.className =
+        "keyboard";
+
+    panel.appendChild(keyboard);
+
+
+    createWordleBoard();
+
+    createWordleKeyboard();
+
+
+    /*
+     * Enter / Backspace / 鍵盤支援。
+     */
+    document.onkeydown =
+        handlePhysicalKeyboard;
+}
+
+
+/* =========================================================
+   Wordle 棋盤
+========================================================= */
+
+function createWordleBoard() {
+
+    const board =
+        document.getElementById(
+            "wordleBoard"
+        );
+
+    if (!board) {
+        return;
+    }
+
+    board.innerHTML = "";
+
+
+    for (
+        let row = 0;
+        row < wordleState.maxAttempts;
+        row++
+    ) {
+
+        const rowElement =
+            document.createElement("div");
+
+        rowElement.className =
+            "wordle-row";
+
+
+        for (
+            let col = 0;
+            col < wordleState.answer.length;
+            col++
+        ) {
+
+            const cell =
+                document.createElement("div");
+
+            cell.className =
+                "wordle-cell";
+
+            cell.id =
+                "cell-" +
+                row +
+                "-" +
+                col;
+
+            rowElement.appendChild(cell);
+        }
+
+
+        board.appendChild(rowElement);
+    }
+}
+
+
+/* =========================================================
+   Wordle 鍵盤
+========================================================= */
+
+function createWordleKeyboard() {
+
+    const keyboard =
+        document.getElementById(
+            "wordleKeyboard"
+        );
+
+    if (!keyboard) {
+        return;
+    }
+
+    keyboard.innerHTML = "";
+
+
+    const rows = [
+        ["q","w","e","r","t","y","u","i","o","p"],
+        ["a","s","d","f","g","h","j","k","l"],
+        ["Enter","z","x","c","v","b","n","m","Backspace"]
+    ];
+
+
+    rows.forEach(row => {
+
+        const rowElement =
+            document.createElement("div");
+
+        rowElement.className =
+            "keyboard-row";
+
+
+        row.forEach(key => {
+
+            const button =
+                document.createElement("button");
+
+            button.className =
+                "key";
+
+            if (
+                key === "Enter" ||
+                key === "Backspace"
+            ) {
+
+                button.classList.add("wide");
+            }
+
+            button.textContent =
+                key === "Backspace"
+                    ? "⌫"
+                    : key;
+
+            button.addEventListener(
+                "click",
+                () => handleWordleKey(key)
+            );
+
+            rowElement.appendChild(button);
+        });
+
+
+        keyboard.appendChild(rowElement);
+    });
+}
+
+
+/* =========================================================
+   Wordle 鍵盤處理
+========================================================= */
+
+function handleWordleKey(key) {
+
+    if (answered) {
+        return;
+    }
+
+
+    if (key === "Enter") {
+
+        submitWordleGuess();
+
+        return;
+    }
+
+
+    if (key === "Backspace") {
+
+        wordleState.currentGuess =
+            wordleState.currentGuess.slice(
+                0,
+                -1
+            );
+
+        updateWordleBoard();
+
+        return;
+    }
+
+
+    if (/^[a-z]$/i.test(key)) {
+
+        if (
+            wordleState.currentGuess.length <
+            wordleState.answer.length
+        ) {
+
+            wordleState.currentGuess +=
+                key.toLowerCase();
+
+            updateWordleBoard();
+        }
+    }
+}
+
+
+/*
+ * 實體鍵盤。
+ */
+function handlePhysicalKeyboard(event) {
+
+    /*
+     * 只有 Wordle 題目才處理。
+     */
+    if (
+        !wordleState ||
+        !wordleState.answer ||
+        answered
+    ) {
+        return;
+    }
+
+
+    const key =
+        event.key;
+
+
+    if (key === "Enter") {
+
+        event.preventDefault();
+
+        submitWordleGuess();
+
+        return;
+    }
+
+
+    if (key === "Backspace") {
+
+        event.preventDefault();
+
+        handleWordleKey("Backspace");
+
+        return;
+    }
+
+
+    if (/^[a-zA-Z]$/.test(key)) {
+
+        event.preventDefault();
+
+        handleWordleKey(
+            key.toLowerCase()
+        );
+    }
+}
+
+
+/* =========================================================
+   Wordle 更新棋盤
+========================================================= */
+
+function updateWordleBoard() {
+
+    const row =
+        wordleState.guesses.length;
+
+    const guess =
+        wordleState.currentGuess;
+
+
+    for (
+        let i = 0;
+        i < wordleState.answer.length;
+        i++
+    ) {
+
+        const cell =
+            document.getElementById(
+                "cell-" +
+                row +
+                "-" +
+                i
+            );
+
+        if (!cell) {
+            continue;
+        }
+
+        cell.textContent =
+            guess[i] || "";
+
+        /*
+         * 尚未提交時不顯示顏色。
+         */
+        cell.classList.remove(
+            "correct",
+            "present",
+            "absent"
+        );
+    }
+}
+
+
+/* =========================================================
+   Wordle 判斷
+========================================================= */
+
+function evaluateWordleGuess(
+    guess,
+    answer
+) {
+
+    const result =
+        new Array(answer.length)
+            .fill("absent");
+
+    const answerChars =
+        answer.split("");
+
+    const guessChars =
+        guess.split("");
+
+
+    /*
+     * 第一階段：
+     * 完全相同位置。
+     */
+    for (
+        let i = 0;
+        i < answer.length;
+        i++
+    ) {
+
+        if (
+            guessChars[i] ===
+            answerChars[i]
+        ) {
+
+            result[i] =
+                "correct";
+
+            answerChars[i] =
+                null;
+
+            guessChars[i] =
+                null;
+        }
+    }
+
+
+    /*
+     * 第二階段：
+     * 黃色。
+     */
+    for (
+        let i = 0;
+        i < answer.length;
+        i++
+    ) {
+
+        if (guessChars[i] === null) {
+            continue;
+        }
+
+
+        const index =
+            answerChars.indexOf(
+                guessChars[i]
+            );
+
+
+        if (index !== -1) {
+
+            result[i] =
+                "present";
+
+            answerChars[index] =
+                null;
+        }
+    }
+
+
+    return result;
+}
+
+
+/* =========================================================
+   Wordle 提交
+========================================================= */
+
+function submitWordleGuess() {
+
+    if (answered) {
+        return;
+    }
+
+
+    const guess =
+        wordleState.currentGuess;
+
+
+    /*
+     * 必須填滿。
+     */
+    if (
+        guess.length !==
+        wordleState.answer.length
+    ) {
+
+        showTemporaryMessage(
+            "請輸入完整的單字。"
+        );
+
+        return;
+    }
+
+
+    /*
+     * 防止同一局重複猜測。
+     */
+    if (
+        wordleState.guesses.includes(
+            guess
+        )
+    ) {
+
+        showTemporaryMessage(
+            "這個單字已經猜過了。"
+        );
+
+        return;
+    }
+
+
+    const result =
+        evaluateWordleGuess(
+            guess,
+            wordleState.answer
+        );
+
+
+    const row =
+        wordleState.guesses.length;
+
+
+    /*
+     * 顯示顏色。
+     */
+    for (
+        let i = 0;
+        i < result.length;
+        i++
+    ) {
+
+        const cell =
+            document.getElementById(
+                "cell-" +
+                row +
+                "-" +
+                i
+            );
+
+        if (!cell) {
+            continue;
+        }
+
+        cell.textContent =
+            guess[i];
+
+        cell.classList.add(
+            result[i]
+        );
+    }
+
+
+    /*
+     * 更新鍵盤。
+     */
+    updateWordleKeyboard(
+        guess,
+        result
+    );
+
+
+    wordleState.guesses.push(
+        guess
+    );
+
+
+    wordleState.currentGuess = "";
+
+
+    /*
+     * 全對。
+     */
+    if (
+        guess ===
+        wordleState.answer
+    ) {
+
+        answered = true;
+
+        processAnswer(
+            true,
+            wordleState.answer
+        );
+
+        return;
+    }
+
+
+    /*
+     * 六次都錯。
+     */
+    if (
+        wordleState.guesses.length >=
+        wordleState.maxAttempts
+    ) {
+
+        answered = true;
+
+        processAnswer(
+            false,
+            wordleState.answer
+        );
+
+        return;
+    }
+
+
+    updateWordleBoard();
+}
+
+
+/* =========================================================
+   Wordle 鍵盤顏色
+========================================================= */
+
+function updateWordleKeyboard(
+    guess,
+    result
+) {
+
+    const keyboard =
+        document.getElementById(
+            "wordleKeyboard"
+        );
+
+    if (!keyboard) {
+        return;
+    }
+
+
+    const buttons =
+        keyboard.querySelectorAll(
+            ".key"
+        );
+
+
+    for (
+        let i = 0;
+        i < guess.length;
+        i++
+    ) {
+
+        const letter =
+            guess[i];
+
+        const state =
+            result[i];
+
+
+        /*
+         * 優先順序：
+         *
+         * correct > present > absent
+         */
+        const old =
+            wordleState.keyboardState[
+                letter
+            ];
+
+
+        if (
+            old === "correct"
+        ) {
+            continue;
+        }
+
+
+        if (
+            old === "present" &&
+            state === "absent"
+        ) {
+            continue;
+        }
+
+
+        wordleState.keyboardState[
+            letter
+        ] = state;
+
+
+        buttons.forEach(btn => {
+
+            if (
+                btn.textContent.toLowerCase() ===
+                letter
+            ) {
+
+                btn.classList.remove(
+                    "correct",
+                    "present",
+                    "absent"
+                );
+
+                btn.classList.add(
+                    state
+                );
+            }
+        });
+    }
+}
+
+
+/* =========================================================
+   模式 3 UI
+========================================================= */
+
+function renderTranslationQuestion(
+    question,
+    panel
+) {
+
+    panel.innerHTML = "";
+
+
+    const mode =
+        document.createElement("div");
+
+    mode.className =
+        "mode-label";
+
+    mode.textContent =
+        "模式 3｜中翻英";
+
+    panel.appendChild(mode);
+
+
+    const title =
+        document.createElement("div");
+
+    title.className =
+        "question-title";
+
+
+    /*
+     * A：單字中翻英
+     */
+    if (
+        question.translationType ===
+        "word"
+    ) {
+
+        title.textContent =
+            "請將中文意思翻譯成英文單字";
+
+        panel.appendChild(title);
+
+
+        const meaning =
+            document.createElement("div");
+
+        meaning.className =
+            "chinese";
+
+        meaning.textContent =
+            question.meaning;
+
+        panel.appendChild(meaning);
+    }
+
+
+    /*
+     * B：例句中翻英
+     */
+    else {
+
+        title.textContent =
+            "請將中文例句翻譯成英文";
+
+        panel.appendChild(title);
+
+
+        const chineseSentence =
+            document.createElement("div");
+
+        chineseSentence.className =
+            "chinese";
+
+        chineseSentence.textContent =
+            question.chineseSentence;
+
+        panel.appendChild(
+            chineseSentence
+        );
+    }
+
+
+    const input =
+        document.createElement("input");
+
+    input.type =
+        "text";
+
+    input.className =
+        "translation-input";
+
+    input.id =
+        "translationInput";
+
+    input.autocomplete =
+        "off";
+
+    input.autocapitalize =
+        "none";
+
+    input.spellcheck =
+        false;
+
+
+    input.placeholder =
+        question.translationType ===
+        "word"
+            ? "請輸入英文單字"
+            : "請輸入英文例句";
+
+
+    panel.appendChild(input);
+
+
+    const submit =
+        document.createElement("button");
+
+    submit.className =
+        "btn-primary next-btn";
+
+    submit.textContent =
+        "送出答案";
+
+    submit.addEventListener(
+        "click",
+        () => {
+
+            checkTranslationAnswer(
+                question
+            );
+        }
+    );
+
+
+    panel.appendChild(submit);
+
+
+    input.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+
+                checkTranslationAnswer(
+                    question
+                );
+            }
+        }
+    );
+
+
+    setTimeout(
+        () => input.focus(),
+        50
+    );
+}
+
+
+/* =========================================================
+   中翻英答案清理
+========================================================= */
+
+function normalizeTranslationAnswer(
+    text
+) {
+
+    let value =
+        String(text || "")
+            .trim()
+            .replace(/\s+/g, " ");
+
+
+    /*
+     * 不分大小寫。
+     */
+    value =
+        value.toLowerCase();
+
+
+    /*
+     * 忽略句尾一般標點。
+     *
+     * 例如：
+     *
+     * .
+     * !
+     * ?
+     * ,
+     * ;
+     * :
+     *
+     * 不影響答案。
+     */
+    value =
+        value.replace(
+            /[.,!?;:。！？；：，]+$/,
+            ""
+        );
+
+
+    return value.trim();
+}
+
+
+/* =========================================================
+   模式 3 作答
+========================================================= */
+
+function checkTranslationAnswer(
+    question
+) {
+
+    if (answered) {
+        return;
+    }
+
+
+    const input =
+        document.getElementById(
+            "translationInput"
+        );
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const userAnswer =
+        normalizeTranslationAnswer(
+            input.value
+        );
+
+
+    if (!userAnswer) {
+
+        showTemporaryMessage(
+            "請先輸入答案。"
+        );
+
+        return;
+    }
+
+
+    const correctAnswer =
+        normalizeTranslationAnswer(
+            question.answer
+        );
+
+
+    /*
+     * 單字：
+     *
+     * 直接比對。
+     */
+    if (
+        question.translationType ===
+        "word"
+    ) {
+
+        const isCorrect =
+            userAnswer ===
+            correctAnswer;
+
+        answered = true;
+
+        input.disabled = true;
+
+        processAnswer(
+            isCorrect,
+            question.answer
+        );
+
+        return;
+    }
+
+
+    /*
+     * 例句：
+     *
+     * 不分大小寫
+     * 忽略前後空白
+     * 忽略多餘空白
+     * 忽略句尾一般標點
+     */
+    if (
+        question.translationType ===
+        "sentence"
+    ) {
+
+        const isCorrect =
+            userAnswer ===
+            correctAnswer;
+
+        answered = true;
+
+        input.disabled = true;
+
+        processAnswer(
+            isCorrect,
+            question.answer
+        );
+    }
+}
+
+
+/* =========================================================
+   計分
+========================================================= */
+
+function processAnswer(
+    isCorrect,
+    correctAnswer
+) {
+
+    if (isCorrect) {
+
+        correctCount++;
+
+        score += 10;
+
+        /*
+         * 分數不得小於 0。
+         */
+        if (score < 0) {
+            score = 0;
+        }
+
+    }
+    else {
+
+        wrongCount++;
+
+        score -= 5;
+
+        /*
+         * 最低分數為 0。
+         */
+        if (score < 0) {
+            score = 0;
+        }
+    }
+
+
+    updateScore();
+
+
+    /*
+     * 顯示結果。
+     */
+    showAnswerResult(
+        isCorrect,
+        correctAnswer
+    );
+}
+
+
+/* =========================================================
+   更新分數
+========================================================= */
+
+function updateScore() {
+
+    document.getElementById(
+        "score"
+    ).textContent =
+        score;
+
+    document.getElementById(
+        "questionNumber"
+    ).textContent =
+        Math.min(
+            currentQuestionIndex + 1,
+            10
+        );
+}
+
+
+/* =========================================================
+   顯示答案結果
+========================================================= */
+
+function showAnswerResult(
+    isCorrect,
+    correctAnswer
+) {
+
+    const panel =
+        document.getElementById(
+            "questionPanel"
+        );
+
+
+    const old =
+        document.getElementById(
+            "answerResult"
+        );
+
+
+    if (old) {
+        old.remove();
+    }
+
+
+    const result =
+        document.createElement("div");
+
+    result.id =
+        "answerResult";
+
+    result.className =
+        "result-message";
+
+
+    if (isCorrect) {
+
+        result.classList.add(
+            "result-correct"
+        );
+
+        result.textContent =
+            "✓ 答對了！ +10 分";
+    }
+    else {
+
+        result.classList.add(
+            "result-wrong"
+        );
+
+        result.innerHTML =
+            "✗ 答錯了！ -5 分<br>" +
+            "正確答案：" +
+            escapeHTML(
+                String(correctAnswer)
+            );
+    }
+
+
+    panel.appendChild(result);
+
+
+    /*
+     * 如果還有下一題，
+     * 顯示下一題按鈕。
+     */
+    if (
+        currentQuestionIndex <
+        gameQuestions.length - 1
+    ) {
+
+        const next =
+            document.createElement("button");
+
+        next.className =
+            "btn-primary next-btn";
+
+        next.textContent =
+            "下一題";
+
+        next.addEventListener(
+            "click",
+            nextQuestion
+        );
+
+        panel.appendChild(next);
+
+    }
+    else {
+
+        const finish =
+            document.createElement("button");
+
+        finish.className =
+            "btn-success next-btn";
+
+        finish.textContent =
+            "查看結果";
+
+        finish.addEventListener(
+            "click",
+            finishGame
+        );
+
+        panel.appendChild(finish);
+    }
+}
+
+
+/* =========================================================
+   下一題
+========================================================= */
+
+function nextQuestion() {
+
+    document.onkeydown = null;
+
+    currentQuestionIndex++;
+
+    if (
+        currentQuestionIndex >=
+        gameQuestions.length
+    ) {
+
+        finishGame();
+
+        return;
+    }
+
+    showQuestion();
+}
+
+
+/* =========================================================
+   無效題目防呆
+========================================================= */
+
+function finishCurrentQuestionAsInvalid() {
+
+    /*
+     * 理論上不應發生。
+     *
+     * 如果發生，不直接產生錯誤畫面，
+     * 而是重新開始。
+     */
+    alert(
+        "偵測到無效題目，將重新產生測驗。"
+    );
+
+    resetGame();
+}
+
+
+/* =========================================================
+   遊戲完成
+========================================================= */
+
+function finishGame() {
+
+    document.onkeydown = null;
+
+    document.getElementById(
+        "gamePanel"
+    ).classList.add("hidden");
+
+
+    document.getElementById(
+        "resultPanel"
+    ).classList.remove("hidden");
+
+
+    const total =
+        gameQuestions.length;
+
+
+    const accuracy =
+        total > 0
+            ? Math.round(
+                correctCount /
+                total *
+                100
+            )
+            : 0;
+
+
+    document.getElementById(
+        "finalTotal"
+    ).textContent =
+        total;
+
+
+    document.getElementById(
+        "finalCorrect"
+    ).textContent =
+        correctCount;
+
+
+    document.getElementById(
+        "finalWrong"
+    ).textContent =
+        wrongCount;
+
+
+    document.getElementById(
+        "finalScore"
+    ).textContent =
+        score;
+
+
+    document.getElementById(
+        "finalScoreText"
+    ).textContent =
+        score;
+
+
+    document.getElementById(
+        "finalAccuracy"
+    ).textContent =
+        accuracy + "%";
+}
+
+
+/* =========================================================
+   重新開始
+========================================================= */
+
+function resetGame() {
+
+    document.onkeydown = null;
+
+    currentQuestionIndex = 0;
+
+    score = 0;
+
+    correctCount = 0;
+
+    wrongCount = 0;
+
+    answered = false;
+
+    gameQuestions = [];
+
+    usedWords = new Set();
+
+    usedSentences = new Set();
+
+    usedChineseSentences = new Set();
+
+    usedQuestions = new Set();
+
+    wordleState = {
+        answer: "",
+        currentGuess: "",
+        guesses: [],
+        maxAttempts: 6,
+        keyboardState: {}
+    };
+
+
+    document.getElementById(
+        "resultPanel"
+    ).classList.add("hidden");
+
+
+    document.getElementById(
+        "gamePanel"
+    ).classList.add("hidden");
+
+
+    document.getElementById(
+        "inputPanel"
+    ).classList.remove("hidden");
+
+
+    updateScore();
+}
+
+
+/* =========================================================
+   TXT 上傳
+========================================================= */
+
+function loadTXTFile() {
+
+    const fileInput =
+        document.getElementById(
+            "fileInput"
+        );
+
+
+    if (
+        !fileInput.files ||
+        fileInput.files.length === 0
+    ) {
+
+        alert(
+            "請先選擇 TXT 檔案。"
+        );
+
+        return;
+    }
+
+
+    const file =
+        fileInput.files[0];
+
+
+    /*
+     * 確認副檔名。
+     */
+    if (
+        !file.name
+            .toLowerCase()
+            .endsWith(".txt")
+    ) {
+
+        alert(
+            "請選擇 TXT 檔案。"
+        );
+
+        return;
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        function(event) {
+
+            const text =
+                event.target.result || "";
+
+
+            document.getElementById(
+                "txtInput"
+            ).value =
+                text;
+
+
+            const parsed =
+                parseVocabulary(text);
+
+
+            showParseStatus(
+                "TXT 已載入，偵測到 " +
+                parsed.length +
+                " 筆有效單字資料。",
+                false
+            );
+        };
+
+
+    reader.onerror =
+        function() {
+
+            showParseStatus(
+                "TXT 讀取失敗。",
+                true
+            );
+        };
+
+
+    reader.readAsText(
+        file,
+        "UTF-8"
+    );
+}
+
+
+/* =========================================================
+   顯示解析狀態
+========================================================= */
+
+function showParseStatus(
+    message,
+    isError
+) {
+
+    const status =
+        document.getElementById(
+            "parseStatus"
+        );
+
+
+    status.textContent =
+        message;
+
+
+    status.style.color =
+        isError
+            ? "#dc3545"
+            : "#198754";
+}
+
+
+/* =========================================================
+   暫時訊息
+========================================================= */
+
+function showTemporaryMessage(
+    message
+) {
+
+    const panel =
+        document.getElementById(
+            "questionPanel"
+        );
+
+
+    if (!panel) {
+        return;
+    }
+
+
+    const old =
+        document.getElementById(
+            "temporaryMessage"
+        );
+
+
+    if (old) {
+        old.remove();
+    }
+
+
+    const element =
+        document.createElement("div");
+
+    element.id =
+        "temporaryMessage";
+
+    element.className =
+        "result-message result-wrong";
+
+    element.textContent =
+        message;
+
+
+    panel.appendChild(element);
+
+
+    setTimeout(
+        () => {
+
+            if (
+                element &&
+                element.parentNode
+            ) {
+
+                element.remove();
+            }
+
+        },
+        1500
+    );
+}
+
+
+/* =========================================================
+   HTML 安全處理
+========================================================= */
+
+function escapeHTML(text) {
+
+    return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+/* =========================================================
+   初始化
+========================================================= */
+
+document
+    .getElementById("fileInput")
+    .addEventListener(
+        "change",
+        function() {
+
+            if (
+                !this.files ||
+                this.files.length === 0
+            ) {
+                return;
+            }
+
+            const file =
+                this.files[0];
+
+            /*
+             * 不自動開始遊戲，
+             * 只讀取 TXT。
+             */
+            const reader =
+                new FileReader();
+
+            reader.onload =
+                function(event) {
+
+                    document.getElementById(
+                        "txtInput"
+                    ).value =
+                        event.target.result || "";
+
+                    const parsed =
+                        parseVocabulary(
+                            event.target.result || ""
+                        );
+
+                    showParseStatus(
+                        "已載入 TXT，共偵測到 " +
+                        parsed.length +
+                        " 筆有效單字資料。",
+                        false
+                    );
+                };
+
+            reader.onerror =
+                function() {
+
+                    showParseStatus(
+                        "TXT 讀取失敗。",
+                        true
+                    );
+                };
+
+            reader.readAsText(
+                file,
+                "UTF-8"
+            );
+        }
+    );
+
+</script>
+
+</body>
+</html>
