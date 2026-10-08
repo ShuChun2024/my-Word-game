@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧型英文單字卡挑戰</title>
+    <script src="https://tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col items-center p-4">
+
+    <header class="w-full max-w-md text-center my-4">
+        <h1 class="text-2xl font-bold text-indigo-600">🎯 多功能單字挑戰賽</h1>
+        <p class="text-xs text-slate-500 mt-1">智慧解析書本/筆記格式，自動生成克漏字</p>
+    </header>
+
+    <!-- 區塊一：資料輸入 -->
+    <main id="setup-screen" class="w-full max-w-md bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+        <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">步驟 1：上傳您的文字筆記檔 (.txt)</label>
+            <input type="file" id="file-input" accept=".txt" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">或直接在下方貼上文字內容：</label>
+            <textarea id="text-input" rows="10" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="直接複製您的單字與例句貼到這裡..."></textarea>
+        </div>
+
+        <button id="start-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]">
+            🚀 開始生成題目
+        </button>
+    </main>
+
+    <!-- 區塊二：遊戲測驗區 -->
+    <main id="game-screen" class="w-full max-w-md bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-5 hidden">
+        <div class="flex justify-between items-center text-sm font-medium text-slate-500">
+            <span id="progress">題目：0 / 0</span>
+            <span id="score-board" class="text-emerald-600">得分：0</span>
+        </div>
+
+        <!-- 題目核心區 -->
+        <div class="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <!-- 挖空英文例句 -->
+            <div>
+                <div class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">英文例句 (克漏字)</div>
+                <div id="q-sentence" class="text-base font-medium text-slate-800 leading-relaxed italic"></div>
+            </div>
+            
+            <!-- 例句中文翻譯 -->
+            <div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">例句中譯</div>
+                <div id="q-chinese" class="text-sm text-slate-600"></div>
+            </div>
+
+            <!-- 提示：目標單字的中文化身 -->
+            <div class="pt-2 border-t border-slate-200/60">
+                <div class="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1">目標單字字義</div>
+                <div id="q-target-meaning" class="text-sm font-semibold text-slate-700"></div>
+            </div>
+            
+            <!-- 延伸出題重點 (若有才顯示) -->
+            <div id="q-focus-box" class="pt-2 border-t border-slate-200/60 hidden">
+                <div class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">💡 出題重點</div>
+                <div id="q-focus" class="text-xs text-slate-500 whitespace-pre-line"></div>
+            </div>
+        </div>
+
+        <!-- 四選一按鈕 -->
+        <div id="options-container" class="grid grid-cols-1 gap-2.5"></div>
+
+        <!-- 下一題按鈕 -->
+        <button id="next-btn" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-xl hidden transition-all">
+            下一題 ➡️
+        </button>
+    </main>
+
+    <!-- 區塊三：結算畫面 -->
+    <main id="result-screen" class="w-full max-w-md bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center space-y-4 hidden">
+        <h2 class="text-2xl font-bold text-slate-800">🎉 挑戰完成！</h2>
+        <p id="final-score" class="text-xl font-medium text-indigo-600"></p>
+        <button onclick="location.reload()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl">
+            再挑戰一次
+        </button>
+    </main>
+
+    <script>
+        let quizBank = [];
+        let currentIndex = 0;
+        let score = 0;
+
+        const setupScreen = document.getElementById('setup-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const fileInput = document.getElementById('file-input');
+        const textInput = document.getElementById('text-input');
+
+        // 讀取上傳檔案
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => textInput.value = e.target.result;
+            reader.readAsText(file);
+        });
+
+        // 解析複雜格式的文檔
+        document.getElementById('start-btn').addEventListener('click', () => {
+            const text = textInput.value.trim();
+            if (!text) return alert('請先輸入或上傳單字筆記！');
+
+            // 依據「兩個以上的換行（空行）」將文章切成獨立的單字群組
+            const blocks = text.split(/\n\s*\n+/);
+            quizBank = [];
+
+            blocks.forEach(block => {
+                const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                if (lines.length < 2) return;
+
+                let vocabList = [];
+                let sentenceEng = '';
+                let sentenceCh = '';
+                let focusText = '';
+                let isFocus = false;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+
+                    // 判斷是否進入出題重點
+                    if (line.includes('出題重點')) {
+                        isFocus = true;
+                        continue;
+                    }
+                    if (isFocus) {
+                        focusText += line + '\n';
+                        continue;
+                    }
+
+                    // 判斷是否為英文例句（通常以英文開頭且較長，或包含句號）
+                    const isEnglishSentence = /^[A-Za-z]/.test(line) && (line.split(' ').length > 3 || line.includes('.'));
+                    
+                    if (isEnglishSentence && !sentenceEng) {
+                        sentenceEng = line;
+                        // 下一行通常就是例句中譯
+                        if (i + 1 < lines.length && !lines[i+1].includes('出題重點')) {
+                            sentenceCh = lines[i+1];
+                            i++; // 跳過下一行
+                        }
+                    } else {
+                        // 這是單字或中文解釋組
+                        // 如果這行是純英文，且下一行不是英文例句，就把（這行+下一行）當作單字與字義
+                        if (/^[A-Za-z-]+$/.test(line) && i + 1 < lines.length && !/^[A-Za-z]/.test(lines[i+1])) {
+                            vocabList.push({ word: line, meaning: lines[i+1] });
+                            i++;
+                        }
+                    }
+                }
+
+                // 如果有抓到單字和例句，就封裝成一個考題
+                if (vocabList.length > 0 && sentenceEng) {
+                    quizBank.push({
+                        vocabularies: vocabList, // 該組的所有衍生單字
+                        sentenceEng: sentenceEng,
+                        sentenceCh: sentenceCh,
+                        focus: focusText.trim()
+                    });
+                }
+            });
+
+            if (quizBank.length < 1) return alert('未能成功解析單字項目，請檢查格式是否符合「單字、中譯、例句、空行」！');
+
+            // 打亂題目順序
+            quizBank.sort(() => Math.random() - 0.5);
+            
+            // 切換至遊戲畫面
+            setupScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            loadQuestion();
+        });
+
+        // 載入題目邏輯
+        function loadQuestion() {
+            if (currentIndex >= quizBank.length) {
+                showResult();
+                return;
+            }
+
+            const currentGroup = quizBank[currentIndex];
+            
+            // 從這組衍生字中，隨機選一個做為本次的「目標考題單字」
+            // 優先挑選例句中有出現的單字，若沒完全符合則挑第一個
+            let targetItem = currentGroup.vocabularies[0];
+            for (let v of currentGroup.vocabularies) {
+                if (currentGroup.sentenceEng.toLowerCase().includes(v.word.toLowerCase())) {
+                    targetItem = v;
+                    break;
+                }
+            }
+
+            document.getElementById('progress').innerText = `題目：${currentIndex + 1} / ${quizBank.length}`;
+            document.getElementById('score-board').innerText = `得分：${score}`;
+
+            // 將例句中的目標單字挖空 (考慮大小寫與複數/過去式變化，用正則做局部模糊取代)
+            const escapedWord = targetItem.word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(escapedWord + '[a-z]*', 'gi'); 
+            const blankedSentence = currentGroup.sentenceEng.replace(regex, '_______');
+
+            document.getElementById('q-sentence').innerText = blankedSentence;
+            document.getElementById('q-chinese').innerText = currentGroup.sentenceCh;
+            document.getElementById('q-target-meaning').innerText = `${targetItem.meaning}`;
+
+            // 處理出題重點顯示
+            const focusBox = document.getElementById('q-focus-box');
+            if (currentGroup.focus) {
+                document.getElementById('q-focus').innerText = currentGroup.focus;
+                focusBox.classList.add('hidden'); // 答題前先隱藏，答完再看
+            } else {
+                focusBox.classList.add('hidden');
+            }
+
+            // 產生隨機 4 個選項 (正確答案 + 從其他群組隨機抓 3 個英文單字)
+            let options = [targetItem.word];
+            let allOtherWords = [];
+            quizBank.forEach((g, idx) => {
+                if (idx !== currentIndex) {
+                    g.vocabularies.forEach(v => allOtherWords.push(v.word));
+                }
+            });
+            // 萬一其他單字不夠，補一些常見多益單字
+這段程式碼已經為您準備好了，它可以直接放入您的 index.html 檔案中，並完美支援手機瀏覽器操作。
+如果您想擴充這組測驗，讓它包含刚才提到的全部 10 題完整測驗，可以直接複製下方為您更新的版本。我已經將完整的 10 道 HTML 與 CSS 基礎題目全部寫入 quizData 陣列中，並最佳化了手機版的點擊手感與排版：
+
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的網頁設計小測驗</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 22px;
+            color: #1a73e8;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .progress {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .question {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-btn {
+            background-color: #f8f9fa;
+            border: 2px solid #dadce0;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .option-btn:active {
+            background-color: #e8eaed;
+        }
+        .option-btn.correct {
+            background-color: #e6f4ea;
+            border-color: #34a853;
+            color: #137333;
+            font-weight: bold;
+        }
+        .option-btn.incorrect {
+            background-color: #fce8e6;
+            border-color: #ea4335;
+            color: #c5221f;
+        }
+        .result-message {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 24px;
+            line-height: 1.4;
+        }
+        .next-btn {
+            width: 100%;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+            display: none;
+            box-sizing: border-box;
+        }
+        .next-btn:active {
+            background-color: #1557b0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>📝 HTML & CSS 基礎入門測驗</h1>
+    <div class="progress" id="progress-text">題目載入中...</div>
+    <div id="quiz-box">
+        <div class="question" id="question-text"></div>
+        <div class="options" id="options-box"></div>
+        <div class="result-message" id="result-text"></div>
+        <button class="next-btn" id="next-button" onclick="nextQuestion()">下一題</button>
+    </div>
+</div>
+
+<script>
+    // 完整的 10 題測驗資料
+    const quizData = [
+        {
+            question: "1. 網站的第一個首頁（根目錄預設頁面）通常應該命名為什麼檔案名稱？",
+            options: ["main.html", "index.html", "home.html", "start.html"],
+            correct: 1,
+            hint: "提示：這個單字以字母 i 開頭，是全球網頁伺服器公認的預設首頁檔名。"
+        },
+        {
+            question: "2. 在 HTML 文件中，哪一個標籤用來包裹網頁中所有「直接可見的內容」？",
+            options: ["<head>", "<title>", "<html>", "<body>"],
+            correct: 3,
+            hint: "提示：想像成人類的「身體」，它是承載所有外在顯現特徵的地方。"
+        },
+        {
+            question: "3. HTML 中用來表示最大、最重要的主標題（Heading 1）是哪一個標籤？",
+            options: ["<h1>", "<head>", "<h6>", "<title>"],
+            correct: 0,
+            hint: "提示：英文 Heading 的縮寫 h，後面加上數字 1 代表第一級。"
+        },
+        {
+            question: "4. 要在網頁中建立一個連往外部網站的超連結，應該使用哪一個標籤與屬性組合？",
+            options: ["<link href='...'>", "<url link='...'>", "<a href='...'>", "<href link='...'>"],
+            correct: 2,
+            hint: "提示：這個標籤取自「Anchor（錨點）」的第一個字母。"
+        },
+        {
+            question: "5. 請問在 HTML 中插入圖片時，必須使用哪一個標籤，以及用來指定圖片路徑的屬性名稱為何？",
+            options: ["<image> 搭配 href", "<img> 搭配 src", "<pic> 搭配 path", "<img> 搭配 url"],
+            correct: 1,
+            hint: "提示：標籤名稱是 image 的簡寫（三個字母），屬性名稱是 source 的簡寫（三個字母）。"
+        },
+        {
+            question: "6. 哪一個 HTML 標籤組合可以用來建立「無序列表（項目符號呈現圓點的清單）」？",
+            options: ["<ol> 和 <li>", "<list> 和 <li>", "<dl> 和 <dt>", "<ul> 和 <li>"],
+            correct: 3,
+            hint: "提示：Unordered List（無序列表）與 List Item（列表項目）的縮寫開頭。"
+        },
+        {
+            question: "7. 若要在 HTML 文件中引入外部的 CSS 樣式表檔案，應該寫在 <head> 區塊內的哪一個標籤？",
+            options: ["<link rel='stylesheet' href='style.css'>", "<style src='style.css'>", "<css>style.css</css>", "<script href='style.css'>"],
+            correct: 0,
+            hint: "提示：這個標籤用來「連結」外部資源，且必須設定 rel='stylesheet' 屬性。"
+        },
+        {
+            question: "8. 在 CSS 中，如果要選取所有具有特定類別名稱（class）的網頁元素，應該使用哪一個符號來開頭？",
+            options: ["# (井號)", "* (星號)", ". (小數點/句號)", "& (安培號)"],
+            correct: 2,
+            hint: "提示：這個標號形狀是一個圓點，與井號（代表 ID）相對。"
+        },
+        {
+            question: "9. 請問在 CSS 中，用來設定網頁文字「前景色（文字顏色）」的屬性名稱是什麼？",
+            options: ["text-color", "color", "font-color", "background-color"],
+            correct: 1,
+            hint: "提示：這個屬性名稱非常單純，不需要加上任何前綴（如 font 或 text）。"
+        },
+        {
+            question: "10. 在 CSS 盒模型（Box Model）中，用來設定元素「邊框內側（內容與邊框之間）」留白空間的屬性是什麼？",
+            options: ["margin", "border", "spacing", "padding"],
+            correct: 3,
+            hint: "提示：就像包裹快遞時，內部塞的緩衝填充物（內邊距），把內容物跟紙箱壁隔開。"
+        }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+
+    const pText = document.getElementById("progress-text");
+    const qText = document.getElementById("question-text");
+    const oBox = document.getElementById("options-box");
+    const rText = document.getElementById("result-text");
+    const nBtn = document.getElementById("next-button");
+
+    function loadQuestion() {
+        rText.innerText = "";
+        nBtn.style.display = "none";
+        oBox.innerHTML = "";
+
+        if (currentIdx < quizData.length) {
+            pText.innerText = `目前進度：${currentIdx + 1} / ${quizData.length}`;
+            let q = quizData[currentIdx];
+            qText.innerText = q.question;
+
+            q.options.forEach((opt, index) => {
+                let btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                oBox.appendChild(btn);
+            });
+        } else {
+            pText.innerText = "測驗已完成";
+            qText.innerText = "🎉 恭喜完成全部測驗！";
+            oBox.innerHTML = "";
+            rText.innerText = `您的最終得分是：${score} / ${quizData.length} 題！`;
+            rText.style.color = "#1a73e8";
+        }
+    }
+
+    function checkAnswer(selectedIdx, clickedBtn) {
+        let q = quizData[currentIdx];
+        let buttons = oBox.getElementsByClassName("option-btn");
+
+        for (let b of buttons) {
+            b.disabled = true;
+        }
+
+        if (selectedIdx === q.correct) {
+            clickedBtn.classList.add("correct");
+            rText.innerText = "⭕ 答對了！觀念很正確！";
+            rText.style.color = "#137333";
+            score++;
+        } else {
+            clickedBtn.classList.add("incorrect");
+            buttons[q.correct].classList.add("correct"); 
+            rText.innerText = `❌ 答錯囉！\n${q.hint}`;
+            rText.style.color = "#c5221f";
+        }
+
+        nBtn.style.display = "block";
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        loadQuestion();
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
+
+
