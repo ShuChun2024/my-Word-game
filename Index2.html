@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+<title>英文單字小遊戲</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, "Microsoft JhengHei", sans-serif;
+        background: linear-gradient(135deg, #eef4ff, #f7f9fc);
+        color: #222;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 720px;
+        margin: auto;
+        padding: 15px;
+    }
+
+    h1 {
+        text-align: center;
+        margin: 10px 0 18px;
+        font-size: 28px;
+        color: #1f3c88;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 150px;
+        resize: vertical;
+        padding: 12px;
+        border: 2px solid #d5dce8;
+        border-radius: 10px;
+        font-size: 16px;
+        line-height: 1.6;
+        outline: none;
+    }
+
+    textarea:focus {
+        border-color: #4776e6;
+    }
+
+    .file-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .file-label {
+        flex: 1;
+        background: #64748b;
+        color: white;
+        text-align: center;
+        padding: 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    button {
+        border: none;
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-size: 17px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+
+    button:active {
+        transform: scale(0.97);
+    }
+
+    .generate-btn {
+        width: 100%;
+        margin-top: 12px;
+        background: #2563eb;
+        color: white;
+    }
+
+    .generate-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .game-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        text-align: center;
+    }
+
+    .info-box {
+        background: #f1f5f9;
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    .info-title {
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .info-value {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 3px;
+    }
+
+    .mode-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .mode-btn {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    .mode-btn.active {
+        background: #7c3aed;
+        color: white;
+    }
+
+    .question-area {
+        text-align: center;
+    }
+
+    .question-number {
+        color: #64748b;
+        margin-bottom: 12px;
+    }
+
+    .sentence {
+        background: #f8fafc;
+        border-left: 5px solid #3b82f6;
+        padding: 16px;
+        border-radius: 10px;
+        font-size: 19px;
+        line-height: 1.7;
+        text-align: left;
+        margin-bottom: 18px;
+    }
+
+    .target {
+        color: #2563eb;
+        font-weight: bold;
+    }
+
+    .options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .option {
+        background: #eef2ff;
+        color: #1e3a8a;
+        min-height: 60px;
+        font-size: 18px;
+    }
+
+    .option.correct {
+        background: #22c55e !important;
+        color: white !important;
+    }
+
+    .option.wrong {
+        background: #ef4444 !important;
+        color: white !important;
+    }
+
+    .feedback {
+        min-height: 32px;
+        margin: 15px 0 5px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .correct-text {
+        color: #16a34a;
+    }
+
+    .wrong-text {
+        color: #dc2626;
+    }
+
+    /* Wordle */
+
+    .wordle-definition {
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: left;
+        line-height: 1.7;
+        font-size: 17px;
+    }
+
+    .wordle-board {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        align-items: center;
+        margin: 20px 0;
+    }
+
+    .word-row {
+        display: flex;
+        gap: 6px;
+    }
+
+    .letter-box {
+        width: 45px;
+        height: 45px;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 22px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .letter-box.correct {
+        background: #22c55e;
+        border-color: #22c55e;
+        color: white;
+    }
+
+    .letter-box.present {
+        background: #eab308;
+        border-color: #eab308;
+        color: white;
+    }
+
+    .letter-box.absent {
+        background: #64748b;
+        border-color: #64748b;
+        color: white;
+    }
+
+    .word-input {
+        width: 100%;
+        padding: 14px;
+        border: 2px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 20px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        outline: none;
+    }
+
+    .word-input:focus {
+        border-color: #7c3aed;
+    }
+
+    .submit-word {
+        width: 100%;
+        margin-top: 10px;
+        background: #7c3aed;
+        color: white;
+    }
+
+    .next-btn {
+        width: 100%;
+        margin-top: 12px;
+        background: #0f766e;
+        color: white;
+    }
+
+    .restart-btn {
+        width: 100%;
+        background: #475569;
+        color: white;
+        margin-top: 10px;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .empty-message {
+        text-align: center;
+        color: #64748b;
+        padding: 30px 10px;
+    }
+
+    .word-count {
+        margin-top: 8px;
+        font-size: 14px;
+        color: #64748b;
+    }
+
+    @media (max-width: 480px) {
+
+        .container {
+            padding: 10px;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        .sentence {
+            font-size: 17px;
+        }
+
+        .option {
+            font-size: 16px;
+        }
+
+        .letter-box {
+            width: 39px;
+            height: 39px;
+            font-size: 19px;
+        }
+
+        .word-row {
+            gap: 4px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📚 英文單字挑戰</h1>
+
+    <!-- 輸入區 -->
+    <div class="panel">
+
+        <textarea
+            id="textInput"
+            placeholder="請貼上英文文章、課文或單字內容……&#10;&#10;例如：&#10;Michael is responsible for managing the company's financial operations.&#10;He has extensive experience in international business management."
+        ></textarea>
+
+        <div class="file-row">
+
+            <label class="file-label" for="fileInput">
+                📂 上傳 .txt 檔
+            </label>
+
+            <input
+                type="file"
+                id="fileInput"
+                accept=".txt,text/plain"
+            >
+
+        </div>
+
+        <div class="word-count" id="wordCount">
+            尚未分析文字
+        </div>
+
+        <button
+            class="generate-btn"
+            onclick="generateGame()"
+        >
+            🎮 生成遊戲
+        </button>
+
+    </div>
+
+
+    <!-- 遊戲資訊 -->
+    <div class="panel hidden" id="gamePanel">
+
+        <div class="game-info">
+
+            <div class="info-box">
+                <div class="info-title">分數</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-title">題目</div>
+                <div class="info-value">
+                    <span id="currentQuestion">0</span>/<span id="totalQuestion">0</span>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-title">單字數</div>
+                <div class="info-value" id="totalWords">0</div>
+            </div>
+
+        </div>
+
+
+        <!-- 模式切換 -->
+
+        <div class="mode-buttons">
+
+            <button
+                id="modeAButton"
+                class="mode-btn active"
+                onclick="setMode('A')"
+            >
+                A：克漏字
+            </button>
+
+            <button
+                id="modeBButton"
+                class="mode-btn"
+                onclick="setMode('B')"
+            >
+                B：拼字
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 模式 A -->
+    <div
+        class="panel hidden"
+        id="modeAPanel"
+    >
+
+        <div class="question-area">
+
+            <div class="question-number">
+                第 <span id="aQuestionNumber">1</span> 題
+            </div>
+
+            <div
+                class="sentence"
+                id="sentence"
+            ></div>
+
+            <div
+                class="options"
+                id="options"
+            ></div>
+
+            <div
+                class="feedback"
+                id="aFeedback"
+            ></div>
+
+            <button
+                class="next-btn hidden"
+                id="aNextButton"
+                onclick="nextQuestion()"
+            >
+                下一題 →
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 模式 B -->
+    <div
+        class="panel hidden"
+        id="modeBPanel"
+    >
+
+        <div class="question-area">
+
+            <div class="question-number">
+                第 <span id="bQuestionNumber">1</span> 題
+            </div>
+
+            <div
+                class="wordle-definition"
+                id="definition"
+            ></div>
+
+            <div
+                class="wordle-board"
+                id="wordleBoard"
+            ></div>
+
+            <input
+                type="text"
+                id="wordInput"
+                class="word-input"
+                autocomplete="off"
+                autocapitalize="characters"
+                placeholder="輸入英文單字"
+            >
+
+            <button
+                class="submit-word"
+                onclick="submitWord()"
+            >
+                ✓ 確認答案
+            </button>
+
+            <div
+                class="feedback"
+                id="bFeedback"
+            ></div>
+
+            <button
+                class="next-btn hidden"
+                id="bNextButton"
+                onclick="nextQuestion()"
+            >
+                下一題 →
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 尚未開始 -->
+    <div
+        class="panel"
+        id="welcomePanel"
+    >
+
+        <div class="empty-message">
+
+            <div style="font-size:45px;">🎯</div>
+
+            <h2>準備開始</h2>
+
+            <p>
+                請先輸入英文文章或上傳 TXT 檔案，
+                然後按下「生成遊戲」。
+            </p>
+
+            <p>
+                系統會自動挑選
+                <strong>6 個字母以上</strong>
+                的英文單字。
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   全域變數
+===================================================== */
+
+let originalText = "";
+
+let sentences = [];
+
+let vocabulary = [];
+
+let questions = [];
+
+let currentIndex = 0;
+
+let score = 0;
+
+let currentMode = "A";
+
+let currentQuestion = null;
+
+let answered = false;
+
+
+/* =====================================================
+   TXT 檔案上傳
+===================================================== */
+
+document
+    .getElementById("fileInput")
+    .addEventListener("change", function(event) {
+
+        const file = event.target.files[0];
+
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith(".txt")) {
+
+            alert("請選擇 .txt 文字檔案");
+
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+
+            document.getElementById("textInput").value =
+                e.target.result;
+
+            updateWordCount();
+        };
+
+        reader.readAsText(file, "UTF-8");
+
+    });
+
+
+/* =====================================================
+   分析文字
+===================================================== */
+
+function analyzeText(text) {
+
+    /*
+        將英文單字抓出來。
+
+        \b[A-Za-z]{6,}\b
+
+        代表：
+        - 英文字母
+        - 長度至少 6
+    */
+
+    const matches =
+        text.match(/\b[A-Za-z]{6,}\b/g) || [];
+
+    const uniqueWords = [];
+
+    const wordSet = new Set();
+
+    matches.forEach(word => {
+
+        const clean =
+            word.toLowerCase();
+
+        if (!wordSet.has(clean)) {
+
+            wordSet.add(clean);
+
+            uniqueWords.push(clean);
+        }
+
+    });
+
+    return uniqueWords;
+}
+
+
+/* =====================================================
+   分析句子
+===================================================== */
+
+function extractSentences(text) {
+
+    return text
+        .replace(/\r\n/g, "\n")
+        .split(/(?<=[.!?])\s+|\n+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+}
+
+
+/* =====================================================
+   即時顯示單字數
+===================================================== */
+
+document
+    .getElementById("textInput")
+    .addEventListener("input", updateWordCount);
+
+
+function updateWordCount() {
+
+    const text =
+        document.getElementById("textInput").value;
+
+    const words =
+        analyzeText(text);
+
+    document.getElementById("wordCount").textContent =
+        `偵測到 ${words.length} 個符合條件的單字（6 個字母以上）`;
+
+}
+
+
+/* =====================================================
+   生成遊戲
+===================================================== */
+
+function generateGame() {
+
+    originalText =
+        document.getElementById("textInput").value.trim();
+
+    if (!originalText) {
+
+        alert("請先輸入英文文章或上傳 TXT 檔案。");
+
+        return;
+    }
+
+    vocabulary =
+        analyzeText(originalText);
+
+    sentences =
+        extractSentences(originalText);
+
+    if (vocabulary.length < 4) {
+
+        alert(
+            "符合條件的英文單字少於 4 個。\n\n" +
+            "請提供更多英文文章內容。"
+        );
+
+        return;
+    }
+
+    questions =
+        [...vocabulary];
+
+    shuffle(questions);
+
+    currentIndex = 0;
+
+    score = 0;
+
+    answered = false;
+
+    document.getElementById("score").textContent =
+        score;
+
+    document.getElementById("totalWords").textContent =
+        vocabulary.length;
+
+    document.getElementById("totalQuestion").textContent =
+        questions.length;
+
+    document
+        .getElementById("welcomePanel")
+        .classList.add("hidden");
+
+    document
+        .getElementById("gamePanel")
+        .classList.remove("hidden");
+
+    setMode("A");
+
+    loadQuestion();
+
+}
+
+
+/* =====================================================
+   切換模式
+===================================================== */
+
+function setMode(mode) {
+
+    currentMode = mode;
+
+    document
+        .getElementById("modeAButton")
+        .classList.toggle(
+            "active",
+            mode === "A"
+        );
+
+    document
+        .getElementById("modeBButton")
+        .classList.toggle(
+            "active",
+            mode === "B"
+        );
+
+    if (mode === "A") {
+
+        document
+            .getElementById("modeAPanel")
+            .classList.remove("hidden");
+
+        document
+            .getElementById("modeBPanel")
+            .classList.add("hidden");
+
+    } else {
+
+        document
+            .getElementById("modeAPanel")
+            .classList.add("hidden");
+
+        document
+            .getElementById("modeBPanel")
+            .classList.remove("hidden");
+
+    }
+
+    if (questions.length > 0) {
+
+        loadQuestion();
+
+    }
+
+}
+
+
+/* =====================================================
+   載入題目
+===================================================== */
+
+function loadQuestion() {
+
+    if (currentIndex >= questions.length) {
+
+        finishGame();
+
+        return;
+    }
+
+    answered = false;
+
+    currentQuestion =
+        questions[currentIndex];
+
+    document.getElementById("currentQuestion").textContent =
+        currentIndex + 1;
+
+    if (currentMode === "A") {
+
+        loadModeA();
+
+    } else {
+
+        loadModeB();
+
+    }
+
+}
+
+
+/* =====================================================
+   模式 A：克漏字
+===================================================== */
+
+function loadModeA() {
+
+    document
+        .getElementById("aNextButton")
+        .classList.add("hidden");
+
+    document
+        .getElementById("aFeedback")
+        .textContent = "";
+
+    document.getElementById("aQuestionNumber").textContent =
+        currentIndex + 1;
+
+    /*
+        優先尋找包含目標單字的句子。
+    */
+
+    const target =
+        currentQuestion.toLowerCase();
+
+    let candidateSentences =
+        sentences.filter(sentence =>
+            new RegExp(
+                "\\b" +
+                escapeRegExp(target) +
+                "\\b",
+                "i"
+            ).test(sentence)
+        );
+
+    /*
+        如果找不到，隨機選句子。
+    */
+
+    if (candidateSentences.length === 0) {
+
+        candidateSentences =
+            sentences.filter(s =>
+                /\b[A-Za-z]{6,}\b/.test(s)
+            );
+
+    }
+
+    let sentence;
+
+    if (candidateSentences.length > 0) {
+
+        sentence =
+            candidateSentences[
+                Math.floor(
+                    Math.random() *
+                    candidateSentences.length
+                )
+            ];
+
+    } else {
+
+        sentence =
+            originalText;
+
+    }
+
+    /*
+        將目標單字挖空
+    */
+
+    const regex =
+        new RegExp(
+            "\\b" +
+            escapeRegExp(target) +
+            "\\b",
+            "gi"
+        );
+
+    const maskedSentence =
+        sentence.replace(
+            regex,
+            "___"
+        );
+
+    document
+        .getElementById("sentence")
+        .textContent =
+            maskedSentence;
+
+
+    /*
+        建立 4 個選項
+    */
+
+    let options = [target];
+
+    const otherWords =
+        vocabulary.filter(
+            word => word !== target
+        );
+
+    shuffle(otherWords);
+
+    options.push(
+        ...otherWords.slice(
+            0,
+            3
+        )
+    );
+
+    shuffle(options);
+
+    const optionContainer =
+        document.getElementById("options");
+
+    optionContainer.innerHTML = "";
+
+    options.forEach(word => {
+
+        const button =
+            document.createElement("button");
+
+        button.className =
+            "option";
+
+        button.textContent =
+            word;
+
+        button.onclick =
+            () => checkModeA(button, word);
+
+        optionContainer.appendChild(button);
+
+    });
+
+}
+
+
+/* =====================================================
+   模式 A：判斷答案
+===================================================== */
+
+function checkModeA(button, answer) {
+
+    if (answered) return;
+
+    answered = true;
+
+    const feedback =
+        document.getElementById("aFeedback");
+
+    const buttons =
+        document.querySelectorAll(".option");
+
+    buttons.forEach(btn => {
+
+        btn.disabled = true;
+
+        if (
+            btn.textContent.toLowerCase() ===
+            currentQuestion.toLowerCase()
+        ) {
+
+            btn.classList.add("correct");
+
+        }
+
+    });
+
+
+    if (
+        answer.toLowerCase() ===
+        currentQuestion.toLowerCase()
+    ) {
+
+        score += 10;
+
+        feedback.textContent =
+            "🎉 答對了！ +10 分";
+
+        feedback.className =
+            "feedback correct-text";
+
+        button.classList.add("correct");
+
+    } else {
+
+        score -= 5;
+
+        feedback.textContent =
+            `❌ 答錯了！正確答案是：${currentQuestion}  -5 分`;
+
+        feedback.className =
+            "feedback wrong-text";
+
+        button.classList.add("wrong");
+
+    }
+
+    document.getElementById("score").textContent =
+        score;
+
+    document
+        .getElementById("aNextButton")
+        .classList.remove("hidden");
+
+}
+
+
+/* =====================================================
+   模式 B：Wordle
+===================================================== */
+
+function loadModeB() {
+
+    document.getElementById("bQuestionNumber").textContent =
+        currentIndex + 1;
+
+    document
+        .getElementById("bFeedback")
+        .textContent = "";
+
+    document
+        .getElementById("bNextButton")
+        .classList.add("hidden");
+
+    document
+        .getElementById("wordInput")
+        .value = "";
+
+    answered = false;
+
+    const target =
+        currentQuestion;
+
+    /*
+        取得包含單字的句子，
+        作為前後文提示。
+    */
+
+    const candidate =
+        sentences.filter(sentence =>
+            new RegExp(
+                "\\b" +
+                escapeRegExp(target) +
+                "\\b",
+                "i"
+            ).test(sentence)
+        );
+
+    let context = "";
+
+    if (candidate.length > 0) {
+
+        context = candidate[
+            Math.floor(
+                Math.random() *
+                candidate.length
+            )
+        ];
+
+        context =
+            context.replace(
+                new RegExp(
+                    "\\b" +
+                    escapeRegExp(target) +
+                    "\\b",
+                    "gi"
+                ),
+                "______"
+            );
+
+    } else {
+
+        context =
+            "請根據英文文章的前後文，拼出正確單字。";
+
+    }
+
+    const definition =
+        document.getElementById("definition");
+
+    definition.innerHTML =
+        `<strong>💡 前後文提示：</strong><br>${escapeHtml(context)}<br><br>
+         <strong>字母數：</strong> ${target.length} 個字母`;
+
+    createWordleBoard(target.length);
+
+}
+
+
+/* =====================================================
+   建立 Wordle 方格
+===================================================== */
+
+function createWordleBoard(length) {
+
+    const board =
+        document.getElementById("wordleBoard");
+
+    board.innerHTML = "";
+
+    /*
+        最多允許 6 次猜測
+    */
+
+    for (let row = 0; row < 6; row++) {
+
+        const wordRow =
+            document.createElement("div");
+
+        wordRow.className =
+            "word-row";
+
+        for (let i = 0; i < length; i++) {
+
+            const box =
+                document.createElement("div");
+
+            box.className =
+                "letter-box";
+
+            wordRow.appendChild(box);
+
+        }
+
+        board.appendChild(wordRow);
+
+    }
+
+}
+
+
+/* =====================================================
+   Wordle 判斷
+===================================================== */
+
+function submitWord() {
+
+    if (answered) return;
+
+    const input =
+        document
+            .getElementById("wordInput")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const target =
+        currentQuestion.toLowerCase();
+
+    if (!/^[a-z]+$/.test(input)) {
+
+        alert("請只輸入英文字母。");
+
+        return;
+    }
+
+    if (input.length !== target.length) {
+
+        alert(
+            `這個單字需要 ${target.length} 個字母。`
+        );
+
+        return;
+    }
+
+    const board =
+        document.getElementById("wordleBoard");
+
+    const rows =
+        board.querySelectorAll(".word-row");
+
+    /*
+        找到目前還沒有使用的 row
+    */
+
+    let rowIndex = -1;
+
+    for (let i = 0; i < rows.length; i++) {
+
+        const boxes =
+            rows[i].querySelectorAll(".letter-box");
+
+        if (
+            !boxes[0].classList.contains("used")
+        ) {
+
+            rowIndex = i;
+
+            break;
+
+        }
+
+    }
+
+    if (rowIndex === -1) return;
+
+    const boxes =
+        rows[rowIndex]
+            .querySelectorAll(".letter-box");
+
+    /*
+        Wordle 判斷演算法
+    */
+
+    const result =
+        Array(target.length).fill("absent");
+
+    const targetLetters =
+        target.split("");
+
+    const inputLetters =
+        input.split("");
+
+    /*
+        第一輪：完全相同
+    */
+
+    for (let i = 0; i < target.length; i++) {
+
+        if (
+            inputLetters[i] ===
+            targetLetters[i]
+        ) {
+
+            result[i] = "correct";
+
+            targetLetters[i] = null;
+
+        }
+
+    }
+
+    /*
+        第二輪：存在但位置錯誤
+    */
+
+    for (let i = 0; i < target.length; i++) {
+
+        if (result[i] === "correct")
+            continue;
+
+        const index =
+            targetLetters.indexOf(
+                inputLetters[i]
+            );
+
+        if (index !== -1) {
+
+            result[i] = "present";
+
+            targetLetters[index] = null;
+
+        }
+
+    }
+
+
+    /*
+        顯示結果
+    */
+
+    for (let i = 0; i < boxes.length; i++) {
+
+        boxes[i].textContent =
+            inputLetters[i].toUpperCase();
+
+        boxes[i].classList.add(
+            result[i]
+        );
+
+        boxes[i].classList.add(
+            "used"
+        );
+
+    }
+
+
+    /*
+        完全答對
+    */
+
+    if (input === target) {
+
+        answered = true;
+
+        score += 10;
+
+        document.getElementById("bFeedback").textContent =
+            "🎉 答對了！ +10 分";
+
+        document.getElementById("bFeedback").className =
+            "feedback correct-text";
+
+        document
+            .getElementById("bNextButton")
+            .classList.remove("hidden");
+
+    } else {
+
+        /*
+            判斷是否還有機會
+        */
+
+        let remaining = false;
+
+        for (let i = 0; i < rows.length; i++) {
+
+            const box =
+                rows[i].querySelector(".letter-box");
+
+            if (
+                !box.classList.contains("used")
+            ) {
+
+                remaining = true;
+
+                break;
+
+            }
+
+        }
+
+        if (!remaining) {
+
+            answered = true;
+
+            score -= 5;
+
+            document.getElementById("bFeedback").textContent =
+                `❌ 答錯了！正確答案是：${currentQuestion}  -5 分`;
+
+            document.getElementById("bFeedback").className =
+                "feedback wrong-text";
+
+            document
+                .getElementById("bNextButton")
+                .classList.remove("hidden");
+
+        } else {
+
+            document.getElementById("bFeedback").textContent =
+                "再試一次！";
+
+            document.getElementById("bFeedback").className =
+                "feedback";
+
+        }
+
+    }
+
+    document.getElementById("score").textContent =
+        score;
+
+    document.getElementById("wordInput").value = "";
+
+    document
+        .getElementById("wordInput")
+        .focus();
+
+}
+
+
+/* =====================================================
+   Enter 快捷鍵
+===================================================== */
+
+document
+    .getElementById("wordInput")
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                submitWord();
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   下一題
+===================================================== */
+
+function nextQuestion() {
+
+    currentIndex++;
+
+    if (
+        currentIndex >= questions.length
+    ) {
+
+        finishGame();
+
+        return;
+
+    }
+
+    loadQuestion();
+
+}
+
+
+/* =====================================================
+   遊戲結束
+===================================================== */
+
+function finishGame() {
+
+    const total =
+        questions.length;
+
+    const average =
+        total > 0
+        ? Math.round(score / total)
+        : 0;
+
+    alert(
+        `🎉 遊戲完成！\n\n` +
+        `總題數：${total}\n` +
+        `最終分數：${score}\n` +
+        `平均每題：${average} 分`
+    );
+
+    currentIndex = 0;
+
+    shuffle(questions);
+
+    loadQuestion();
+
+}
+
+
+/* =====================================================
+   Fisher-Yates 洗牌
+===================================================== */
+
+function shuffle(array) {
+
+    for (
+        let i = array.length - 1;
+        i > 0;
+        i--
+    ) {
+
+        const j =
+            Math.floor(
+                Math.random() * (i + 1)
+            );
+
+        [
+            array[i],
+            array[j]
+        ] =
+        [
+            array[j],
+            array[i]
+        ];
+
+    }
+
+}
+
+
+/* =====================================================
+   正規表示式 Escape
+===================================================== */
+
+function escapeRegExp(string) {
+
+    return string.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+    );
+
+}
+
+
+/* =====================================================
+   HTML Escape
+===================================================== */
+
+function escapeHtml(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+}
+
+</script>
+
+</body>
+</html>
